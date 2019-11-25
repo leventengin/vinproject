@@ -26,11 +26,10 @@ urlpatterns = [
     url(r'courier_login', views.courier_login),
     url(r'send_location', views.send_location),
     url(r'register_courier', views.register_courier),
-    url(r'record_courier_check', views.record_courier_check),  
-    url(r'record_courier_accept', views.record_courier_accept),    
-    url(r'courier_list_details', views.get_courier_list),  
-     
+    url(r'record_courier_check', views.record_courier_check),
+    url(r'record_courier_accept', views.record_courier_accept),
+    #url(r'courier_list_details', views.get_courier_list),  
+
 ]
 
 urlpatterns += router.urls
-
