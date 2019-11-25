@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import User, AnaFirma
+from .models import User, AnaFirma, Firma
 from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
 
@@ -16,3 +16,10 @@ class AnaFirmaSerializer(serializers.ModelSerializer):
     class Meta:
         model = AnaFirma
         fields = '__all__'
+
+
+class FirmaSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Firma
+        fields = '__all__'
+

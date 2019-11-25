@@ -4,7 +4,7 @@ import datetime
 from django.db.models.signals import post_save, pre_save
 from django.dispatch import receiver
 from django.db.models import Q
-from django.contrib.postgres.fields import ArrayField
+from django.contrib.postgres.fields import ArrayField, JSONField
 
 
 DURUM = (
@@ -20,12 +20,12 @@ KULLANICI_TIPI = (
 ("0", 'Motorcu'),
 ("1", 'Firma'),
 ("2", 'AnaFirma'),
+("3", 'Merkez')
 )
 
 BILDIRIM_TIPI = (
 ("0", 'SOS'),
 )
-
 
 TESLIM_EDILMEDI = (
 ("0", 'Müşteri istemedi'),
@@ -34,14 +34,12 @@ TESLIM_EDILMEDI = (
 ("3", 'Diğer'),
 )
 
-
 ODEME_ALINMADI = (
 ("0", 'POS kaynaklı'),
 ("1", 'Para üstü yok'),
 ("2", 'Müşteride para yok'),
 ("3", 'Diğer'),
 )
-
 
 SOS_SEBEP = (
 ("0", 'Kaza'),
@@ -51,15 +49,23 @@ SOS_SEBEP = (
 ("4", 'Diğer'),
 )
 
+DEVICE_PLATFORM = (
+("0", 'Android'),
+("1", 'IOS'),
+)
 
 
 class User(AbstractUser):
     pass
     tipi = models.CharField(max_length=2, default="0")
     durum = models.CharField(max_length=2, default="0")
+    aktif_firma = models.IntegerField(default=0)
     enlem = models.DecimalField(max_digits=16, decimal_places=12, default="0.0")
     boylam = models.DecimalField(max_digits=16, decimal_places=12, default="0.0")
     aktif = models.BooleanField(default=True)
+    tel_no = models.CharField(max_length=10, default="")
+    device_platform = models.CharField(max_length=1, choices=DEVICE_PLATFORM, default="0")
+    device_id = models.CharField(max_length=10, default="0")
     pic_profile = models.ImageField(upload_to='pic_profile/%Y/%m/%d/',blank=True, null=True,)
     def __str__(self):
        return '%s-%s' % (self.first_name, self.last_name)
@@ -72,15 +78,17 @@ class AnaFirma(models.Model):
 
 
 class Firma(models.Model):
+    user = models.OneToOneField(User, on_delete=models.PROTECT, primary_key=True)
     firma_adi = models.CharField(max_length=80)
     anafirma = models.ForeignKey(AnaFirma, null=True,blank=True, on_delete=models.PROTECT)
+    tel_no = models.CharField(max_length=10, default="")
     adres = models.TextField()
     mahalle = models.CharField(max_length=80)
     ilce = models.CharField(max_length=80)
     il = models.CharField(max_length=80)
     enlem = models.DecimalField(max_digits=16, decimal_places=12, default="0.0")
     boylam = models.DecimalField(max_digits=16, decimal_places=12, default="0.0")
-    motorcular = ArrayField( models.IntegerField())
+    kayitli_motorcular = JSONField(default=dict)
     belge_1 = models.ImageField(upload_to='belge_1/%Y/%m/%d/',blank=True, null=True,)
     belge_2 = models.ImageField(upload_to='belge_2/%Y/%m/%d/',blank=True, null=True,)
     belge_3 = models.ImageField(upload_to='belge_3/%Y/%m/%d/',blank=True, null=True,)
@@ -135,3 +143,72 @@ class Bahsis(models.Model):
     miktar = models.DecimalField(max_digits=6, decimal_places=2,)
     def __str__(self):
        return self.user
+
+
+class ArtiMotorcu(models.Model):
+    user = models.ForeignKey(User, related_name='artimotorcu', on_delete=models.PROTECT)
+    max_motorcu = models.PositiveIntegerField(default=0)
+    gecen_motorcu_adedi = models.PositiveIntegerField(default=0)
+    zaman = models.DateTimeField(auto_now=True)    
+    def __str__(self):
+       return self.user
+
+
+class FaturaDetay(models.Model):
+    user = models.ForeignKey(User, related_name='faturadetay', on_delete=models.PROTECT)
+    yil = models.PositiveIntegerField(default=0)
+    ay = models.PositiveIntegerField(default=0)
+    max_motorcu = models.PositiveIntegerField(default=0)
+    standart_ek = models.BooleanField(blank=True) 
+    ek_kisi = models.PositiveIntegerField(default=0)
+    ek_toplam = models.PositiveIntegerField(default=0) 
+    standart_tutar = models.PositiveIntegerField(default=0) 
+    ek_tutar = models.PositiveIntegerField(default=0) 
+    def __str__(self):
+        return '%s-%s-%s' % (self.username, self.yil, self.ay)
+
+
+class FaturaToplam(models.Model):
+    user = models.ForeignKey(User, related_name='faturatoplam', on_delete=models.PROTECT)
+    yil = models.PositiveIntegerField(default=0)
+    ay = models.PositiveIntegerField(default=0)
+    odendi = models.BooleanField(blank=True) 
+    tutar = models.PositiveIntegerField(default=0) 
+    def __str__(self):
+        return '%s-%s-%s' % (self.username, self.yil, self.ay)
+
+
+
+class Fiyat(models.Model):
+    max_motorcu = models.PositiveIntegerField(default=0)
+    fiyat = models.PositiveIntegerField(default=0)
+    def __str__(self):
+        return '%s-%s' % (self.max_motorcu, self.fiyat)
+
+
+class EkFiyat(models.Model):
+    max_motorcu = models.ForeignKey(Fiyat, related_name='ek_fiyat', on_delete=models.PROTECT)    
+    ek_motorcu = models.PositiveIntegerField(default=0)
+    fiyat = models.PositiveIntegerField(default=0)
+    def __str__(self):
+        return '%s-%s-%s' % (self.max_motorcu, self.ek_motorcu,self.fiyat)
+
+
+class Il(models.Model):
+    il = models.CharField(max_length=80, default="İstanbul")
+    def __str__(self):
+        return '%s' % (self.il)
+
+class Ilce(models.Model):
+    il = models.ForeignKey(Il, related_name='ilce_il', on_delete=models.PROTECT)    
+    ilce = models.CharField(max_length=80, default="Kadıköy")
+    def __str__(self):
+        return '%s-%s' % (self.il, self.ilce)
+
+class Mahalle(models.Model):
+    ilce = models.ForeignKey(Ilce, related_name='mahalle_ilce', on_delete=models.PROTECT)    
+    mahalle = models.CharField(max_length=80, default="Fenerbahçe")
+    def __str__(self):
+        return '%s-%s-%s' % (self.ilce.il, self.ilce, self.mahalle)
+
+

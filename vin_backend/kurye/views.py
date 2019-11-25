@@ -1,9 +1,9 @@
 
 from rest_framework import viewsets
 from django.conf import settings
-from .models import User, AnaFirma
-from .serializers import UserSerializer, AnaFirmaSerializer
-
+from .models import User, AnaFirma, Firma
+from .serializers import UserSerializer, AnaFirmaSerializer, FirmaSerializer
+from django.contrib.auth import get_user_model
 from django.middleware.csrf import get_token
 from rest_framework.authtoken.models import Token
 from django.views.decorators.csrf import csrf_exempt
@@ -31,7 +31,17 @@ from django.conf import settings
 import os
 from .models import User
 
+import random
+import string 
+from django.contrib.auth.models import User
 
+
+
+def _pw(length=10):
+    s = ''
+    for i in range(length):
+        s += random.choice(string.ascii_letters + string.digits)
+    return s
 
 
 
@@ -39,12 +49,16 @@ from .models import User
 
 class UserViewSet(viewsets.ModelViewSet):
     serializer_class = UserSerializer
+    User = get_user_model()
     queryset = User.objects.all()
 
 class AnaFirmaViewSet(viewsets.ModelViewSet):
     serializer_class = AnaFirmaSerializer
     queryset = AnaFirma.objects.all()
 
+class FirmaViewSet(viewsets.ModelViewSet):
+    serializer_class = FirmaSerializer
+    queryset = Firma.objects.all()
 
 
 
@@ -95,6 +109,440 @@ def login(request):
     return Response({'user_id': user.id, 'pic_profile': pic_profile, 'username': user.username, 'first_name': user.first_name, 'last_name': user.last_name, 'token': token.key, 'email': user.email}, status=HTTP_200_OK)
  
 
+@csrf_exempt
+@api_view(["POST"])
+@permission_classes([permissions.AllowAny,])
+def courier_login(request):
+    print("-------------login_courier---------------")
+    pin = request.data.get("pin")
+    platform = request.data.get("device_platform")
+    device_id = request.data.get("device_id")
+    print(pin)
+    print(platform)
+    print(device_id)
+    if not pin or not platform or not device_id:
+        return Response({'success': 'false', 
+                        'message': 'Eksik bilgi gönderildi', 
+                        'courier': {}}, 
+                        status=HTTP_400_BAD_REQUEST)
+
+    User=get_user_model()
+    try:
+        user = User.objects.get(tel_no=pin)
+    except:
+        return Response({'success': 'false', 
+                        'message': 'Telefon no bulunamadı', 
+                        'courier': {}}, 
+                        status=HTTP_400_BAD_REQUEST)
+
+    if user.is_active is False:
+        return Response({'success': 'false', 
+                        'message': 'Kullanıcı aktif değil', 
+                        'courier': {}}, 
+                        status=HTTP_400_BAD_REQUEST)
+
+    if user.aktif is False:
+        return Response({'success': 'false', 
+                        'message': 'Kullanıcı aktif değil, silinmiş', 
+                        'courier': {}}, 
+                        status=HTTP_400_BAD_REQUEST)
+
+    token, created = Token.objects.get_or_create(user=user)
+    print("here is pic_profile:", user.pic_profile)
+    if user.pic_profile:
+        pic_profile = BASE_URL + user.pic_profile.url
+    else:
+        pic_profile = ""
+    return Response({'success': 'true', 
+                    'message': 'Başarılı login', 
+                    'courier': {'user_id': user.id,  
+                                'pic_profile': pic_profile,  
+                                'first_name': user.first_name,  
+                                'last_name': user.last_name,  
+                                'token': token.key,  
+                                'durum': user.durum}}, 
+                    status=HTTP_200_OK)
+
+
+
+@csrf_exempt
+@api_view(["POST"])
+@permission_classes([permissions.IsAuthenticated,])
+def send_location(request):
+    print("-------------send location---------------")
+    token = request.data.get("token")
+    latitude = request.data.get("latitude")
+    longitude = request.data.get("longitude")
+    print(token)
+    print(latitude)
+    print(longitude)
+    if not token or not latitude or not longitude:
+        return Response({'success': 'false', 
+                        'message': 'Eksik bilgi gönderildi', 
+                        'courier_status': ''},
+                        status=HTTP_400_BAD_REQUEST)
+    
+    try:
+        token_obj = Token.objects.get(key=token)
+    except:
+        return Response({'success': 'false', 
+                        'message': 'Token bulunamadı', 
+                        'courier_status': ''}, 
+                        status=HTTP_400_BAD_REQUEST)
+    
+    user = token_obj.user
+    
+    if user.is_active is False:
+        return Response({'success': 'false', 
+                        'message': 'Kullanıcı aktif değil', 
+                        'courier_status': ''}, 
+                        status=HTTP_400_BAD_REQUEST)
+
+    if user.aktif is False:
+        return Response({'success': 'false', 
+                        'message': 'Kullanıcı aktif değil, silinmiş', 
+                        'courier_status': ''}, 
+                        status=HTTP_400_BAD_REQUEST)
+
+    #token, created = Token.objects.get_or_create(user=user) 
+ 
+    user.enlem = latitude
+    user.boylam = longitude
+    user.save()
+
+    return Response({'success': 'true', 
+                    'message': 'Başarılı', 
+                    'courier_status': user.durum}, 
+                    status=HTTP_200_OK)
+
+
+
+@csrf_exempt
+@api_view(["POST"])
+@permission_classes([permissions.AllowAny,])
+def register_courier(request):
+    print("-------------register_courier---------------")
+    token = request.data.get("token")
+    name = request.data.get("name")
+    family_name = request.data.get("family_name")
+    kendi_motoru = request.data.get("kendi_motoru")
+    fulltime_parttime = request.data.get("fulltime_parttime")
+    il = request.data.get("il")
+    ilce = request.data.get("ilce")
+    mahalle = request.data.get("mahalle")
+    adress = request.data.get("adress")
+    tel_no = request.data.get("tel_no")
+    picture = request.FILES.get("picture")
+    
+    print(token)
+    print(name)
+    print(family_name)
+    print(kendi_motoru)
+    print(fulltime_parttime)
+    print(il)
+    print(ilce)
+    print(mahalle)
+    print(adress)       
+    print(tel_no)
+    print(picture)
+
+
+    # gelen yeni motorcu bilgilerinde token, ad , soyad eksik mi bak
+    #---------------------------------------------------------------
+    if not token or not name or not family_name:
+        return Response({'success': 'false', 
+                        'message': 'Eksik bilgi gönderildi', 
+                        },
+                        status=HTTP_400_BAD_REQUEST)
+    
+    # telefon numarası eksik mi bak, önemli
+    if not tel_no:
+            return Response({'success': 'false', 
+                            'message': 'Telefon numarası eksik', 
+                            },
+                            status=HTTP_400_BAD_REQUEST)
+
+    # gönderimi yapan restorant için token var mu bak,
+    # token değişmiş olabilir bu durumda tekrar login olmalı
+    try:
+        token_obj = Token.objects.get(key=token)
+    except:
+        return Response({'success': 'false', 
+                        'message': 'Token bulunamadı, lütfen login olun', 
+                        }, 
+                        status=HTTP_400_BAD_REQUEST)
+    
+    # aynı telefon numarası var mı  kontrol et, telefon numarası tek olmalı
+    User = get_user_model()
+    user_obj = User.objects.filter(tel_no=tel_no)
+    if user_obj:
+         return Response({'success': 'false', 
+                        'message': 'Bu kişi daha önce telefon numarası ile kayıtlı', 
+                        }, 
+                        status=HTTP_400_BAD_REQUEST)      
+    
+    # burada bilgileri gelmiş olan yeni motorcuyu kaydet
+    # --------------------------------------------------
+
+    password = _pw()
+    print(password)
+
+    User.objects.create(username=tel_no, 
+                        first_name=name,
+                        last_name=family_name,
+                        password=password,
+                        tipi=0,
+                        durum=0,
+                        tel_no=tel_no,
+                        #pic_profile=picture,
+                        )
+
+    user_obj = User.objects.last()
+    prit(user_obj.username)
+
+    return Response({'success': 'true', 
+                    'message': 'Başarılı', 
+                    }, 
+                    status=HTTP_200_OK)
+
+
+
+
+
+@csrf_exempt
+@api_view(["POST"])
+@permission_classes([permissions.AllowAny,])
+def record_courier_check(request):
+    print("-------------register_courier---------------")
+    token = request.data.get("token")
+    tel_no = request.data.get("tel_no")
+    
+    print(token)
+    print(tel_no)
+
+    # gelen yeni motorcu bilgilerinde token, ad , soyad eksik mi bak
+    #---------------------------------------------------------------
+    if not token:
+        return Response({'success': 'false', 
+                        'message': 'Eksik bilgi gönderildi', 
+                        },
+                        status=HTTP_400_BAD_REQUEST)
+    
+    # telefon numarası eksik mi bak, önemli
+    if not tel_no:
+            return Response({'success': 'false', 
+                            'message': 'Telefon numarası eksik', 
+                            },
+                            status=HTTP_400_BAD_REQUEST)
+
+    # gönderimi yapan restorant için token var mu bak,
+    # token değişmiş olabilir bu durumda tekrar login olmalı
+    try:
+        token_obj = Token.objects.get(key=token)
+    except:
+        return Response({'success': 'false', 
+                        'message': 'Token bulunamadı, lütfen login olun', 
+                        }, 
+                        status=HTTP_400_BAD_REQUEST)
+    
+
+    
+    # burada bilgileri gelmiş olan yeni motorcuyu kontrol et uygun mu
+    # ---------------------------------------------------------------
+
+    user_obj = User.objects.filter(tel_no=tel=no).first()
+
+    if user_obj.count() != 1:
+        return Response({'success': 'false', 
+                        'message': 'Telefon numarası birden çok kayıtlı', 
+                        },
+                        status=HTTP_400_BAD_REQUEST)    
+
+    token_obj = Token.objects.get(key=token)
+    firma_obj = Firma.objects.filter(id=token_obj.user).first()
+
+    if not(firma_obj): 
+        return Response({'success': 'false', 
+                        'message': 'Restorant kayıtlı değil', 
+                        },
+                        status=HTTP_400_BAD_REQUEST)           
+
+
+
+    return Response({'success': 'true',    url(r'remove_courier_check', views.remove_courier_check),  
+    url(r'remove_courier_accept', views.remove_courier_accept),  
+                    'message': 'Başarılı login', 
+                    'courier': {'user_id': user_obj.id,  
+                                'pic_profile': user_obj.pic_profile,  
+                                'first_name': user_obj.first_name,  
+                                'last_name': user_obj.last_name,  
+                                'durum': user_obj.durum,
+                                'tel_no': user_obj.tel_no,
+                                'kayıtlı_motorcular': firma_obj.kayıtlı_motorcular,
+                                }}, 
+                    status=HTTP_200_OK)
+
+
+
+@csrf_exempt
+@api_view(["POST"])
+@permission_classes([permissions.AllowAny,])
+def record_courier_accept(request):
+    print("-------------register_courier---------------")
+    token = request.data.get("token")
+    tel_no = request.data.get("tel_no")
+    courier_list = request.data.get("courier_list")
+    
+    print(token)
+    print(tel_no)
+    print(courier_list)
+
+    # gelen yeni motorcu bilgilerinde token, ad , soyad eksik mi bak
+    #---------------------------------------------------------------
+    if not token:
+        return Response({'success': 'false', 
+                        'message': 'Eksik bilgi gönderildi', 
+                        },
+                        status=HTTP_400_BAD_REQUEST)
+    
+    # telefon numarası eksik mi bak, önemli
+    if not tel_no:
+            return Response({'success': 'false', 
+                            'message': 'Telefon numarası eksik', 
+                            },
+                            status=HTTP_400_BAD_REQUEST)
+
+    # gönderimi yapan restorant için token var mu bak,
+    # token değişmiş olabilir bu durumda tekrar login olmalı
+    try:
+        token_obj = Token.objects.get(key=token)
+    except:
+        return Response({'success': 'false', 
+                        'message': 'Token bulunamadı, lütfen login olun', 
+                        }, 
+                        status=HTTP_400_BAD_REQUEST)
+    
+    
+    # burada bilgileri gelmiş olan yeni motorcuyu kontrol et uygun mu
+    # ---------------------------------------------------------------
+
+
+    token_obj = Token.objects.get(key=token)
+    firma_obj = Firma.objects.filter(id=token_obj.user).first()
+
+    if not(firma_obj): 
+        return Response({'success': 'false', 
+                        'message': 'Restorant kayıtlı değil', 
+                        },
+                        status=HTTP_400_BAD_REQUEST)           
+
+    firma_obj.kayitli_motorcular =  courier_list
+    firma_obj.save()
+
+    return Response({'success': 'true', 
+                    'message': 'Motorcu  kayıtlı listesine alındı', 
+                    }, 
+                    status=HTTP_200_OK)
+
+
+
+
+
+@csrf_exempt
+@api_view(["POST"])
+@permission_classes([permissions.AllowAny,])
+def courier_list_details(request):
+    print("-------------register_courier---------------")
+    token = request.data.get("token")
+    name = request.data.get("name")
+    family_name = request.data.get("family_name")
+    kendi_motoru = request.data.get("kendi_motoru")
+    fulltime_parttime = request.data.get("fulltime_parttime")
+    il = request.data.get("il")
+    ilce = request.data.get("ilce")
+    mahalle = request.data.get("mahalle")
+    adress = request.data.get("adress")
+    tel_no = request.data.get("tel_no")
+    picture = request.FILES.get("picture")
+    
+    print(token)
+    print(name)
+    print(family_name)
+    print(kendi_motoru)
+    print(fulltime_parttime)
+    print(il)
+    print(ilce)
+    print(mahalle)
+    print(adress)       
+    print(tel_no)
+    print(picture)
+
+
+    # gelen yeni motorcu bilgilerinde token, ad , soyad eksik mi bak
+    #---------------------------------------------------------------
+    if not token or not name or not family_name:
+        return Response({'success': 'false', 
+                        'message': 'Eksik bilgi gönderildi', 
+                        },
+                        status=HTTP_400_BAD_REQUEST)
+    
+    # telefon numarası eksik mi bak, önemli
+    if not tel_no:
+            return Response({'success': 'false', 
+                            'message': 'Telefon numarası eksik', 
+                            },
+                            status=HTTP_400_BAD_REQUEST)
+
+    # gönderimi yapan restorant için token var mu bak,
+    # token değişmiş olabilir bu durumda tekrar login olmalı
+    try:
+        token_obj = Token.objects.get(key=token)
+    except:
+        return Response({'success': 'false', 
+                        'message': 'Token bulunamadı, lütfen login olun', 
+                        }, 
+                        status=HTTP_400_BAD_REQUEST)
+    
+    # aynı telefon numarası var mı  kontrol et, telefon numarası tek olmalı
+    User = get_user_model()
+    user_obj = User.objects.filter(tel_no=tel_no)
+    if user_obj:
+         return Response({'success': 'false', 
+                        'message': 'Bu kişi daha önce telefon numarası ile kayıtlı', 
+                        }, 
+                        status=HTTP_400_BAD_REQUEST)      
+    
+    # burada bilgileri gelmiş olan yeni motorcuyu kaydet
+    # --------------------------------------------------
+
+    password = _pw()
+    print(password)
+
+    User.objects.create(username=tel_no, 
+                        first_name=name,
+                        last_name=family_name,
+                        password=password,
+                        tipi=0,
+                        durum=0,
+                        tel_no=tel_no,
+                        #pic_profile=picture,
+                        )
+
+    user_obj = User.objects.last()
+    prit(user_obj.username)
+
+    return Response({'success': 'true', 
+                    'message': 'Başarılı', 
+                    }, 
+                    status=HTTP_200_OK)
+
+
+
+
+
+
+
+
 
 
 @csrf_exempt
@@ -137,7 +585,7 @@ def register(request):
         ctx = { 'name': user.get_full_name(), 'link': link}
         message = get_template('registration_template.html').render(ctx)
         email = EmailMessage(
-                    mail_subject, message, to=[email], from_email=settings.EMAIL_HOST_USER
+                mail_subject, message, to=[email], from_email=settings.EMAIL_HOST_USER
         )
         email.content_subtype = 'html'
         email.send()

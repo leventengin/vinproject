@@ -10,21 +10,15 @@ import AdminLayout from "layouts/Admin.js";
 import "assets/scss/material-dashboard-pro-react.scss?v=1.8.0";
 import { createContext, useContext } from 'react';
 
-//import AuthContext from './context/auth';
+
 import PrivateRoute from './PrivateRoute';
 
 
 
-export default function App(props) {
+export default function App() {
 
     const hist = createBrowserHistory();
-    const [authTokens, setAuthTokens] = useState();
-    /*
-    const setTokens = (data) => {
-      localStorage.setItem("tokens", JSON.stringify(data));
-      setAuthTokens(data);
-    }
-    */
+
     const AuthContext = createContext();
     const token = localStorage.getItem('token');
     console.log("App içinden token:"+token);
@@ -33,11 +27,11 @@ export default function App(props) {
         <AuthContext.Provider value={token}>
             <Router history={hist}>
                 <Switch>
-                    <PrivateRoute path="/rtl" component={RtlLayout} />
-                    <PrivateRoute path="/auth" component={AuthLayout} />
-                    <PrivateRoute path="/admin" component={AdminLayout} />
+                    { (token == "") && <Route path="/auth" component={AuthLayout} />}
+                    <Route path="/rtl" component={RtlLayout} />
+                    <Route path="/auth" component={AuthLayout} />
+                    <Route path="/admin" component={AdminLayout} />
                     <Redirect from="/" to="/admin/dashboard" />  
-      
                 </Switch>
             </Router>
         </AuthContext.Provider>    

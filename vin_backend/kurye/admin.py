@@ -1,5 +1,6 @@
 from django.contrib import admin
-from .models import User, AnaFirma
+from .models import User, Firma, AnaFirma, Teslimat, Islemler, Bildirim, Bahsis, ArtiMotorcu
+from .models import FaturaDetay, FaturaToplam, Fiyat, EkFiyat, Il, Ilce, Mahalle
 from django.contrib.auth.forms import UserChangeForm, UserCreationForm
 from django.contrib.auth.admin import UserAdmin
 from django import forms
@@ -18,7 +19,7 @@ class MyUserAdmin(UserAdmin):
     search_fields = UserAdmin.search_fields+('durum',)
     # Yeni alanlar
     fieldsets = UserAdmin.fieldsets + (
-            (None, {'fields': ('durum',)}),
+            (None, {'fields': ('tipi', 'durum', 'enlem', 'boylam', 'aktif', 'tel_no', 'device_platform', 'device_id', 'pic_profile')}),
     )
 
 
@@ -39,4 +40,18 @@ class MyUserCreationForm(UserCreationForm):
 
 # MyUserAdmin sınıfı ile genişlettik.
 admin.site.register(User, MyUserAdmin)# Register your models here.
+admin.site.register(Firma)
 admin.site.register(AnaFirma)
+admin.site.register(Teslimat)
+admin.site.register(Islemler)
+admin.site.register(Bildirim)
+admin.site.register(Bahsis)
+admin.site.register(ArtiMotorcu)
+admin.site.register(FaturaDetay)
+admin.site.register(FaturaToplam)
+admin.site.register(Fiyat)
+admin.site.register(EkFiyat)
+admin.site.register(Il)
+admin.site.register(Ilce)
+admin.site.register(Mahalle)
+

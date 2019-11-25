@@ -16,6 +16,7 @@
 */
 
 const API_BASE_URL="http://localhost:8000/";
+//const API_BASE_URL="http://185.153.249.94:8000/";
 
 // ##############################
 // // // Function that converts from hex color to rgb color

@@ -18,6 +18,11 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 BASE_URL = 'http://127.0.0.1:8000'
 REACT_URL = 'http://127.0.0.1:3000'
 
+#BASE_URL = 'http://185.153.249.94:8000'
+#REACT_URL = 'http://185.153.249.94:3000'
+
+
+
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/2.2/howto/deployment/checklist/
 
@@ -27,7 +32,7 @@ SECRET_KEY = '-wwt3%v8e4oz4h4i8ggdz=-5qe*$-5is8^^(0vrfqx6h!h_adc'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['127.0.0.1', 'localhost']
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '185.153.249.94']
 
 
 # Application definition
@@ -182,6 +187,7 @@ CORS_ORIGIN_ALLOW_ALL = True
 CORS_ORIGIN_WHITELIST = (
     '127.0.0.1:3000',
     'localhost:3000',
+    '185.153.249.94:3000', 
 )
 
 
