@@ -27,14 +27,13 @@ export default function App() {
         <AuthContext.Provider value={token}>
             <Router history={hist}>
                 <Switch>
-                    { (token == "") && <Route path="/auth" component={AuthLayout} />}
-                    <Route path="/rtl" component={RtlLayout} />
-                    <Route path="/auth" component={AuthLayout} />
-                    <Route path="/admin" component={AdminLayout} />
-                    <Redirect from="/" to="/admin/dashboard" />  
+                     { (token == "") && <Route path="/auth" component={AuthLayout} />}
+                     <Route  path="/rtl" component={RtlLayout} />
+                     <Route path="/auth" component={AuthLayout} />
+                     <Route  path="/admin" component={AdminLayout} />
+                       <Redirect from="/" to="/admin/dashboard" />
                 </Switch>
             </Router>
-        </AuthContext.Provider>    
+        </AuthContext.Provider>
     )
 }
-

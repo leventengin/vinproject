@@ -74,15 +74,17 @@ def login(request):
     if not username_or_email or not password:
         return Response({'error': 'Lütfen kullanıcı adı ve parola girin'},
                         status=HTTP_400_BAD_REQUEST)
-    """
+    
     if '@' in username_or_email:
-        kwargs = {'email': username_or_email}
+        pass
     else:
-        kwargs = {'username': username_or_email}
-    """
-    kwargs = {'username': username_or_email}
+        return Response({'error': 'Lütfen eposta hesabı giriniz'},
+                        status=HTTP_400_BAD_REQUEST)
+
+    User=get_user_model()
+
     try:
-        user = User.objects.get(**kwargs)
+        user = User.objects.get(email=username_or_email)
     except:
         return Response({'error': 'Kullanıcı adı hatalı'},
                         status=HTTP_400_BAD_REQUEST)
@@ -101,6 +103,7 @@ def login(request):
         status=HTTP_400_BAD_REQUEST)
 
     token, created = Token.objects.get_or_create(user=user)
+    
     print("here is pic_profile:", user.pic_profile)
     if user.pic_profile:
         pic_profile = BASE_URL + user.pic_profile.url
@@ -128,10 +131,10 @@ def courier_login(request):
 
     User=get_user_model()
     try:
-        user = User.objects.get(tel_no=pin)
+        user = User.objects.get(pin=pin)
     except:
         return Response({'success': 'false',
-                        'message': 'Telefon no bulunamadı',
+                        'message': 'Pin bulunamadı',
                         'courier': {}},
                         status=HTTP_400_BAD_REQUEST)
 
@@ -622,6 +625,7 @@ def logout(request):
     try:
         uid = request.data.get('uid')
         print(uid)
+        User=get_user_model()
         user = User.objects.get(pk=uid)
         print(user)
     except(TypeError, ValueError, OverflowError, User.DoesNotExist):

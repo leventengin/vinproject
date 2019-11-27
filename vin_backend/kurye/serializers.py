@@ -23,3 +23,5 @@ class FirmaSerializer(serializers.ModelSerializer):
         model = Firma
         fields = '__all__'
 
+
+

@@ -63,30 +63,32 @@ function HeaderLinks(props) {
     const user_id = localStorage.getItem('user_id');
     if ((user_id == "") || (localStorage.getItem('token') == ""))
       {
+        console.log("if user is or token is null props.history.push/auth/");
         props.history.push('/auth/');
       }
-    try {
-      const res = await axios.post(`${API_BASE_URL}auth/logout/`, {
-          uid: user_id
-      });
-      console.log(res);
-      const token = res.data.token;
-      localStorage.setItem('token', "");
-      localStorage.setItem('userName', "");
-      localStorage.setItem('firstName', "");
-      localStorage.setItem('lastName', "");
-      localStorage.setItem('pic_profile', "");
-      localStorage.setItem('user_id', "");
-      localStorage.setItem('email', "");
-      props.history.push('/auth/');
-    } catch (err) {
-      console.log(err.response);
-      console.log(err.response.data);     
-      console.log(err.response.status);     
-      console.log(err.response.data.detail);     
-      //console.log("bağlantı hatası...");          
-    }
-
+    else {
+      try {
+        const res = await axios.post(`${API_BASE_URL}auth/logout/`, {
+            uid: user_id
+        });
+        console.log(res);
+        const token = res.data.token;
+        localStorage.setItem('token', "");
+        localStorage.setItem('userName', "");
+        localStorage.setItem('firstName', "");
+        localStorage.setItem('lastName', "");
+        localStorage.setItem('pic_profile', "");
+        localStorage.setItem('user_id', "");
+        localStorage.setItem('email', "");
+        props.history.push('/auth/');
+      } catch (err) {
+        console.log(err.response);
+        console.log(err.response.data);
+        console.log(err.response.status);
+        console.log(err.response.data.detail);
+        //console.log("bağlantı hatası...");
+      }
+    } //if-else
   };
 
 
@@ -337,4 +339,3 @@ HeaderLinks.propTypes = {
 };
 
 export default withRouter(HeaderLinks);
-

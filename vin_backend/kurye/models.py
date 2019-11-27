@@ -82,6 +82,7 @@ class Firma(models.Model):
     firma_adi = models.CharField(max_length=80)
     anafirma = models.ForeignKey(AnaFirma, null=True,blank=True, on_delete=models.PROTECT)
     tel_no = models.CharField(max_length=10, default="")
+    pin = models.CharField(max_length=6, default="")
     adres = models.TextField()
     mahalle = models.CharField(max_length=80)
     ilce = models.CharField(max_length=80)
@@ -210,5 +211,10 @@ class Mahalle(models.Model):
     mahalle = models.CharField(max_length=80, default="Fenerbahçe")
     def __str__(self):
         return '%s-%s-%s' % (self.ilce.il, self.ilce, self.mahalle)
+
+
+class WSClient(models.Model):
+    user = models.ForeignKey(User, related_name='wskurye', on_delete=models.PROTECT)
+    channel_name = models.CharField(max_length=200, default="")
 
 
