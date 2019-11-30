@@ -60,6 +60,7 @@ function LoginPage(props) {
                 username_or_email: username,
                 password: password
             });
+            console.log("try içinde");
             console.log(res);
             const token = res.data.token;
             const userName = res.data.username;
@@ -76,14 +77,16 @@ function LoginPage(props) {
             localStorage.setItem('user_id', userId);
             localStorage.setItem('email', email);
 
-          } catch (err) {
+          }
+           catch (err) {
+            console.log("catch içinde");
             console.log(err.response);
-            console.log(err.response.data);     
-            console.log(err.response.status);     
-            console.log(err.response.data.error);     
+            console.log(err.response.data);
+            console.log(err.response.status);
+            console.log(err.response.data.error);
             setError(true);
             setErrorType(err.response.data.error);
-            //console.log("bağlantı hatası...");          
+            //console.log("bağlantı hatası...");
           }
 
           if (localStorage.token){
@@ -124,7 +127,7 @@ function LoginPage(props) {
                 </div>
               </CardHeader>
               <CardBody>
-              
+
                 <CustomInput
                   labelText="Eposta"
                   id="email"
@@ -138,7 +141,7 @@ function LoginPage(props) {
                         <Email className={classes.inputAdornmentIcon} />
                       </InputAdornment>
                     ),
-                  onChange: (e) => setUsername(e.target.value)        
+                  onChange: (e) => setUsername(e.target.value)
                   }}
                   //onChange = { (e) => setUsername(e.target.value)}
                 />
@@ -178,4 +181,3 @@ function LoginPage(props) {
 
 
 export default withRouter(LoginPage);
-

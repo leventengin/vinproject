@@ -1,7 +1,7 @@
 
 from rest_framework import viewsets
 from django.conf import settings
-from .models import User, AnaFirma, Firma
+from .models import User, AnaFirma, Firma, Ticket
 from .serializers import UserSerializer, AnaFirmaSerializer, FirmaSerializer
 from django.contrib.auth import get_user_model
 from django.middleware.csrf import get_token
@@ -30,10 +30,14 @@ from django.http import HttpResponse
 from django.conf import settings
 import os
 from .models import User
-
+from .ticket import TicketGenerator
 import random
 import string
 from django.contrib.auth.models import User
+from django.http import JsonResponse
+import requests
+from django.urls import reverse
+import json 
 
 
 
@@ -42,7 +46,6 @@ def _pw(length=10):
     for i in range(length):
         s += random.choice(string.ascii_letters + string.digits)
     return s
-
 
 
 
@@ -59,6 +62,101 @@ class AnaFirmaViewSet(viewsets.ModelViewSet):
 class FirmaViewSet(viewsets.ModelViewSet):
     serializer_class = FirmaSerializer
     queryset = Firma.objects.all()
+
+
+
+
+@csrf_exempt
+@api_view(["POST"])
+@permission_classes([permissions.AllowAny,])
+def custom_auth(request):
+    print("--------custom auth---------------")
+    ticket = request.data.get("token")
+    print(ticket)
+    if not ticket:
+        return Response({'error': 'Ticket girilmemiş'},
+                        status=HTTP_400_BAD_REQUEST)
+    
+
+    User=get_user_model()
+
+    try:
+        ticket_obj = Ticket.objects.get(ticket=ticket)
+        user = ticket_obj.user
+    except:
+        return Response({'error': 'Ticket yanlış'},
+                        status=HTTP_400_BAD_REQUEST)
+
+    if user.is_active is False:
+        return Response({'error': 'Hesap aktif değil'},
+        status=HTTP_400_BAD_REQUEST)
+
+    if user.aktif is False:
+        return Response({'error': 'Hesap kapalı'},
+        status=HTTP_400_BAD_REQUEST)
+
+    ticket, created = Ticket.objects.get_or_create(user=user)
+
+    return Response({'success': 'true',
+                    'message': 'Ticket başarılı',
+                    'courier': {'user_id': user.id,
+                                'pic_profile': user.pic_profile,
+                                'first_name': user.first_name,
+                                'last_name': user.last_name,
+                                'token': ticket.key,
+                                'durum': user.durum}},
+                    status=HTTP_200_OK)
+
+
+
+
+@csrf_exempt
+@api_view(["POST"])
+@permission_classes([permissions.AllowAny,])
+def pin_login(request):
+    print("-------------pin login---------------")
+    pin = request.data.get("pin").rstrip()
+    print(pin)
+    if not pin:
+        return Response({'error': 'Pin girilmemiş'},
+                        status=HTTP_400_BAD_REQUEST)
+    
+
+    User=get_user_model()
+
+    try:
+        user = User.objects.get(pin=pin)
+    except:
+        return Response({'error': 'Pin tanımlı değil'},
+                        status=HTTP_400_BAD_REQUEST)
+
+    if user.is_active is False:
+        return Response({'error': 'Hesap aktif değil'},
+        status=HTTP_400_BAD_REQUEST)
+
+    if user.aktif is False:
+        return Response({'error': 'Hesap kapalı'},
+        status=HTTP_400_BAD_REQUEST)
+    
+    new_password = _pw()
+    print("new password", new_password)
+    user.set_password(new_password)
+    user.save()
+
+    print(user.username, '/', user.password)
+    #json_data = JsonResponse({'username':user.username, 'password': user.password})
+    json_data = {'username':user.username, 'password': new_password}
+    print(json_data)
+
+    response_login = requests.post(
+        request.build_absolute_uri(reverse('token_obtain_pair')),
+        data=json_data
+    )
+
+    response_login_dict = json.loads(response_login.content)
+    return Response(response_login_dict, response_login.status_code)
+
+
 
 
 
@@ -102,14 +200,31 @@ def login(request):
         return Response({'error': 'Hesap kapalı'},
         status=HTTP_400_BAD_REQUEST)
 
-    token, created = Token.objects.get_or_create(user=user)
+
+    ticket_obj = Ticket.objects.filter(user=user)
+
+    if ticket_obj is None:
+        key = TicketGenerator()
+        Ticket.objects.create(user=user, key=key)
+    elif user.tipi == "0":
+        ticket_upd = Ticket.objects.get(user=user)
+        key = TicketGenerator()
+        ticket_upd.key = key
+        ticket_upd.user = user
+        ticket_upd.save()
+    else: 
+        key = TicketGenerator()
+        Ticket.objects.create(user=user, key=key)
+
     
     print("here is pic_profile:", user.pic_profile)
     if user.pic_profile:
         pic_profile = BASE_URL + user.pic_profile.url
     else:
         pic_profile = ""
-    return Response({'user_id': user.id, 'pic_profile': pic_profile, 'username': user.username, 'first_name': user.first_name, 'last_name': user.last_name, 'token': token.key, 'email': user.email}, status=HTTP_200_OK)
+    return Response({'user_id': user.id, 'pic_profile': pic_profile, 'username': user.username, 'first_name': user.first_name, 'last_name': user.last_name, 'token': ticket.key, 'email': user.email}, status=HTTP_200_OK)
+
+
 
 
 @csrf_exempt
@@ -150,7 +265,7 @@ def courier_login(request):
                         'courier': {}},
                         status=HTTP_400_BAD_REQUEST)
 
-    token, created = Token.objects.get_or_create(user=user)
+    ticket, created = Ticket.objects.get_or_create(user=user)
     print("here is pic_profile:", user.pic_profile)
     if user.pic_profile:
         pic_profile = BASE_URL + user.pic_profile.url
@@ -162,7 +277,7 @@ def courier_login(request):
                                 'pic_profile': pic_profile,
                                 'first_name': user.first_name,
                                 'last_name': user.last_name,
-                                'token': token.key,
+                                'token': ticket.key,
                                 'durum': user.durum}},
                     status=HTTP_200_OK)
 

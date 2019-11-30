@@ -64,6 +64,7 @@ class User(AbstractUser):
     boylam = models.DecimalField(max_digits=16, decimal_places=12, default="0.0")
     aktif = models.BooleanField(default=True)
     tel_no = models.CharField(max_length=10, default="")
+    pin = models.CharField(max_length=6, default="")   
     device_platform = models.CharField(max_length=1, choices=DEVICE_PLATFORM, default="0")
     device_id = models.CharField(max_length=10, default="0")
     pic_profile = models.ImageField(upload_to='pic_profile/%Y/%m/%d/',blank=True, null=True,)
@@ -216,5 +217,12 @@ class Mahalle(models.Model):
 class WSClient(models.Model):
     user = models.ForeignKey(User, related_name='wskurye', on_delete=models.PROTECT)
     channel_name = models.CharField(max_length=200, default="")
+
+
+class Ticket(models.Model):
+    user = models.ForeignKey(User, related_name='ticket', on_delete=models.PROTECT)
+    key = models.CharField(max_length=20, default="")
+    created = models.DateTimeField(auto_now=True)
+
 
 

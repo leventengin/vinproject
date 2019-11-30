@@ -19,6 +19,7 @@ from django.views.generic import TemplateView
 from django.conf import settings
 from django.conf.urls.static import static
 
+
 from kurye import views
 
 """
@@ -42,6 +43,8 @@ urlpatterns = [
     path('auth/register/', views.register),
     path('auth/activate/', views.activate),
     path('auth/logout/', views.logout),
+    path('auth/custom_auth/', views.custom_auth),
+
 ]
 if settings.DEBUG:
     print("static - media  urls and roots")

@@ -5,7 +5,11 @@ from django.conf.urls.static import static
 from django.conf.urls import url
 from django.urls import path, include, re_path
 from django.views.generic import TemplateView
-
+#from rest_framework_jwt.views import obtain_jwt_token, refresh_jwt_token, verify_jwt_token
+from rest_framework_simplejwt.views import (
+    TokenObtainPairView,
+    TokenRefreshView,
+)
 from django.contrib.auth import views
 from . import views
 
@@ -28,6 +32,15 @@ urlpatterns = [
     url(r'register_courier', views.register_courier),
     url(r'record_courier_check', views.record_courier_check),
     url(r'record_courier_accept', views.record_courier_accept),
+    #url(r'^auth-token', obtain_jwt_token),
+    #url(r'^auth-token-refresh', refresh_jwt_token),
+    #url(r'^auth-token-verify', verify_jwt_token),    
+    url(r'^token', TokenObtainPairView.as_view(), name='token_obtain_pair'),
+    url(r'^refresh', TokenRefreshView.as_view(), name='token_refresh'),
+    url(r'^pin', views.pin_login, name='pin_login'),
+
+
+
     #url(r'courier_list_details', views.get_courier_list),  
 
 ]
