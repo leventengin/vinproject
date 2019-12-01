@@ -39,11 +39,10 @@ urlpatterns = [
     path('rest-auth/registration/', include('rest_auth.registration.urls')),
     path('api/', include('kurye.urls')),
     path('admin/', admin.site.urls),
-    path('auth/login/', views.login),
-    path('auth/register/', views.register),
-    path('auth/activate/', views.activate),
+    path('auth/rest_login/', views.rest_login),
+    path('auth/rest_register/', views.rest_register),
+    path('auth/rest_activate/', views.rest_activate),
     path('auth/logout/', views.logout),
-    path('auth/custom_auth/', views.custom_auth),
 
 ]
 if settings.DEBUG:

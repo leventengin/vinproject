@@ -55,16 +55,20 @@ DEVICE_PLATFORM = (
 )
 
 
+
+
 class User(AbstractUser):
     pass
     tipi = models.CharField(max_length=2, default="0")
     durum = models.CharField(max_length=2, default="0")
     aktif_firma = models.IntegerField(default=0)
+    sira = models.IntegerField(default=0)
     enlem = models.DecimalField(max_digits=16, decimal_places=12, default="0.0")
     boylam = models.DecimalField(max_digits=16, decimal_places=12, default="0.0")
     aktif = models.BooleanField(default=True)
     tel_no = models.CharField(max_length=10, default="")
-    pin = models.CharField(max_length=6, default="")   
+    pin = models.CharField(max_length=6, default="")
+    kaydolunan_restoranlar = ArrayField(models.IntegerField(), blank=True, null=True)
     device_platform = models.CharField(max_length=1, choices=DEVICE_PLATFORM, default="0")
     device_id = models.CharField(max_length=10, default="0")
     pic_profile = models.ImageField(upload_to='pic_profile/%Y/%m/%d/',blank=True, null=True,)
@@ -84,13 +88,14 @@ class Firma(models.Model):
     anafirma = models.ForeignKey(AnaFirma, null=True,blank=True, on_delete=models.PROTECT)
     tel_no = models.CharField(max_length=10, default="")
     pin = models.CharField(max_length=6, default="")
+    allow_self_delivery = models.BooleanField(blank=False, default=False)
+    kayitli_motorcular = ArrayField(models.IntegerField(), blank=True, null=True)
     adres = models.TextField()
     mahalle = models.CharField(max_length=80)
     ilce = models.CharField(max_length=80)
     il = models.CharField(max_length=80)
     enlem = models.DecimalField(max_digits=16, decimal_places=12, default="0.0")
     boylam = models.DecimalField(max_digits=16, decimal_places=12, default="0.0")
-    kayitli_motorcular = JSONField(default=dict)
     belge_1 = models.ImageField(upload_to='belge_1/%Y/%m/%d/',blank=True, null=True,)
     belge_2 = models.ImageField(upload_to='belge_2/%Y/%m/%d/',blank=True, null=True,)
     belge_3 = models.ImageField(upload_to='belge_3/%Y/%m/%d/',blank=True, null=True,)
@@ -215,14 +220,8 @@ class Mahalle(models.Model):
 
 
 class WSClient(models.Model):
-    user = models.ForeignKey(User, related_name='wskurye', on_delete=models.PROTECT)
+    user = models.ForeignKey(User, related_name='wsclient', on_delete=models.CASCADE)
     channel_name = models.CharField(max_length=200, default="")
-
-
-class Ticket(models.Model):
-    user = models.ForeignKey(User, related_name='ticket', on_delete=models.PROTECT)
-    key = models.CharField(max_length=20, default="")
-    created = models.DateTimeField(auto_now=True)
 
 
 

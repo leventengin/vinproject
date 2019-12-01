@@ -1,7 +1,7 @@
 
 from rest_framework import viewsets
 from django.conf import settings
-from .models import User, AnaFirma, Firma, Ticket
+from .models import User, AnaFirma, Firma, WSClient
 from .serializers import UserSerializer, AnaFirmaSerializer, FirmaSerializer
 from django.contrib.auth import get_user_model
 from django.middleware.csrf import get_token
@@ -30,7 +30,6 @@ from django.http import HttpResponse
 from django.conf import settings
 import os
 from .models import User
-from .ticket import TicketGenerator
 import random
 import string
 from django.contrib.auth.models import User
@@ -66,49 +65,6 @@ class FirmaViewSet(viewsets.ModelViewSet):
 
 
 
-@csrf_exempt
-@api_view(["POST"])
-@permission_classes([permissions.AllowAny,])
-def custom_auth(request):
-    print("--------custom auth---------------")
-    ticket = request.data.get("token")
-    print(ticket)
-    if not ticket:
-        return Response({'error': 'Ticket girilmemiş'},
-                        status=HTTP_400_BAD_REQUEST)
-    
-
-    User=get_user_model()
-
-    try:
-        ticket_obj = Ticket.objects.get(ticket=ticket)
-        user = ticket_obj.user
-    except:
-        return Response({'error': 'Ticket yanlış'},
-                        status=HTTP_400_BAD_REQUEST)
-
-    if user.is_active is False:
-        return Response({'error': 'Hesap aktif değil'},
-        status=HTTP_400_BAD_REQUEST)
-
-    if user.aktif is False:
-        return Response({'error': 'Hesap kapalı'},
-        status=HTTP_400_BAD_REQUEST)
-
-    ticket, created = Ticket.objects.get_or_create(user=user)
-
-    return Response({'success': 'true',
-                    'message': 'Ticket başarılı',
-                    'courier': {'user_id': user.id,
-                                'pic_profile': user.pic_profile,
-                                'first_name': user.first_name,
-                                'last_name': user.last_name,
-                                'token': ticket.key,
-                                'durum': user.durum}},
-                    status=HTTP_200_OK)
-
-
-
 
 @csrf_exempt
 @api_view(["POST"])
@@ -118,25 +74,36 @@ def pin_login(request):
     pin = request.data.get("pin").rstrip()
     print(pin)
     if not pin:
-        return Response({'error': 'Pin girilmemiş'},
-                        status=HTTP_400_BAD_REQUEST)
+        return Response({'success': 'false',
+                         'message': 'Pin girilmemiş',
+                         'response' : {
+                         }},
+                         status=HTTP_400_BAD_REQUEST)
     
-
     User=get_user_model()
 
     try:
         user = User.objects.get(pin=pin)
     except:
-        return Response({'error': 'Pin tanımlı değil'},
-                        status=HTTP_400_BAD_REQUEST)
+        return Response({'success': 'false',
+                         'message': 'Pin tanımlı değil',
+                         'response' : {
+                         }},
+                         status=HTTP_400_BAD_REQUEST)
 
     if user.is_active is False:
-        return Response({'error': 'Hesap aktif değil'},
-        status=HTTP_400_BAD_REQUEST)
+        return Response({'success': 'false',
+                         'message': 'Kullanıcı aktif değil',
+                         'response' : {
+                         }},
+                         status=HTTP_400_BAD_REQUEST)
 
     if user.aktif is False:
-        return Response({'error': 'Hesap kapalı'},
-        status=HTTP_400_BAD_REQUEST)
+        return Response({'success': 'false',
+                         'message': 'Hesap kapalı',
+                         'response' : {
+                         }},
+                         status=HTTP_400_BAD_REQUEST)
     
     new_password = _pw()
     print("new password", new_password)
@@ -163,58 +130,62 @@ def pin_login(request):
 @csrf_exempt
 @api_view(["POST"])
 @permission_classes([permissions.AllowAny,])
-def login(request):
+def rest_login(request):
     print("-------------login---------------")
     username_or_email = request.data.get("username_or_email").rstrip()
     password = request.data.get("password")
     print(username_or_email)
     print(password)
     if not username_or_email or not password:
-        return Response({'error': 'Lütfen kullanıcı adı ve parola girin'},
-                        status=HTTP_400_BAD_REQUEST)
+        return Response({'success': 'false',
+                         'message': 'Lütfen kullanıcı adı ve parola giriniz',
+                         'response' : {
+                         }},
+                         status=HTTP_400_BAD_REQUEST)
     
     if '@' in username_or_email:
         pass
     else:
-        return Response({'error': 'Lütfen eposta hesabı giriniz'},
-                        status=HTTP_400_BAD_REQUEST)
-
+        return Response({'success': 'false',
+                         'message': 'Lütfen eposta hesabı giriniz',
+                         'response' : {
+                         }},
+                         status=HTTP_400_BAD_REQUEST)
     User=get_user_model()
 
     try:
         user = User.objects.get(email=username_or_email)
     except:
-        return Response({'error': 'Kullanıcı adı hatalı'},
-                        status=HTTP_400_BAD_REQUEST)
+        return Response({'success': 'false',
+                         'message': 'Kullanıcı adı hatalı',
+                         'response' : {
+                         }},
+                         status=HTTP_400_BAD_REQUEST)
 
     check_password = user.check_password(password)
     if not check_password:
-        return Response({'error': 'Parola hatalı'},
-                        status=HTTP_400_BAD_REQUEST)
+        return Response({'success': 'false',
+                         'message': 'Parola hatalı',
+                         'response' : {
+                         }},
+                         status=HTTP_400_BAD_REQUEST)
 
     if user.is_active is False:
-        return Response({'error': 'Hesap aktif değil'},
-        status=HTTP_400_BAD_REQUEST)
+        return Response({'success': 'false',
+                         'message': 'Hesap aktif değil',
+                         'response' : {
+                            'courier_status': ''
+                         }},
+                         status=HTTP_400_BAD_REQUEST)
 
     if user.aktif is False:
-        return Response({'error': 'Hesap kapalı'},
-        status=HTTP_400_BAD_REQUEST)
+        return Response({'success': 'false',
+                         'message': 'Hesap kapalı',
+                         'response' : {
+                            'courier_status': ''
+                         }},
+                         status=HTTP_400_BAD_REQUEST)
 
-
-    ticket_obj = Ticket.objects.filter(user=user)
-
-    if ticket_obj is None:
-        key = TicketGenerator()
-        Ticket.objects.create(user=user, key=key)
-    elif user.tipi == "0":
-        ticket_upd = Ticket.objects.get(user=user)
-        key = TicketGenerator()
-        ticket_upd.key = key
-        ticket_upd.user = user
-        ticket_upd.save()
-    else: 
-        key = TicketGenerator()
-        Ticket.objects.create(user=user, key=key)
 
     
     print("here is pic_profile:", user.pic_profile)
@@ -222,7 +193,8 @@ def login(request):
         pic_profile = BASE_URL + user.pic_profile.url
     else:
         pic_profile = ""
-    return Response({'user_id': user.id, 'pic_profile': pic_profile, 'username': user.username, 'first_name': user.first_name, 'last_name': user.last_name, 'token': ticket.key, 'email': user.email}, status=HTTP_200_OK)
+    return Response({'user_id': user.id, 'pic_profile': pic_profile, 'username': user.username, 'first_name': user.first_name, 'last_name': user.last_name,  'email': user.email}, status=HTTP_200_OK)
+
 
 
 
@@ -230,7 +202,7 @@ def login(request):
 @csrf_exempt
 @api_view(["POST"])
 @permission_classes([permissions.AllowAny,])
-def courier_login(request):
+def courier_get_self_data(request):
     print("-------------login_courier---------------")
     pin = request.data.get("pin")
     platform = request.data.get("device_platform")
@@ -240,32 +212,36 @@ def courier_login(request):
     print(device_id)
     if not pin or not platform or not device_id:
         return Response({'success': 'false',
-                        'message': 'Eksik bilgi gönderildi',
-                        'courier': {}},
-                        status=HTTP_400_BAD_REQUEST)
+                         'message': 'Eksik bilgi gönderildi',
+                         'response' : {
+                         }},
+                         status=HTTP_400_BAD_REQUEST)
 
     User=get_user_model()
     try:
         user = User.objects.get(pin=pin)
     except:
         return Response({'success': 'false',
-                        'message': 'Pin bulunamadı',
-                        'courier': {}},
-                        status=HTTP_400_BAD_REQUEST)
+                         'message': 'Pin bulunamadı',
+                         'response' : {
+                         }},
+                         status=HTTP_400_BAD_REQUEST)
 
     if user.is_active is False:
         return Response({'success': 'false',
-                        'message': 'Kullanıcı aktif değil',
-                        'courier': {}},
-                        status=HTTP_400_BAD_REQUEST)
+                         'message': 'Kullanıcı aktif değil',
+                         'response' : {
+                         }},
+                         status=HTTP_400_BAD_REQUEST)
 
     if user.aktif is False:
         return Response({'success': 'false',
-                        'message': 'Kullanıcı aktif değil, silinmiş',
-                        'courier': {}},
-                        status=HTTP_400_BAD_REQUEST)
+                         'message': 'Kullanıcı silinmiş',
+                         'response' : {
+                         }},
+                         status=HTTP_400_BAD_REQUEST)
 
-    ticket, created = Ticket.objects.get_or_create(user=user)
+
     print("here is pic_profile:", user.pic_profile)
     if user.pic_profile:
         pic_profile = BASE_URL + user.pic_profile.url
@@ -273,16 +249,19 @@ def courier_login(request):
         pic_profile = ""
     return Response({'success': 'true',
                     'message': 'Başarılı login',
-                    'courier': {'user_id': user.id,
-                                'pic_profile': pic_profile,
-                                'first_name': user.first_name,
-                                'last_name': user.last_name,
-                                'token': ticket.key,
-                                'durum': user.durum}},
+                    'response':{
+                            'courier': { 'user_id': user.id,
+                                         'pic_profile': pic_profile,
+                                         'first_name': user.first_name,
+                                         'last_name': user.last_name,
+                                         'durum': user.durum}
+                    }},
                     status=HTTP_200_OK)
 
 
 
+
+"""
 @csrf_exempt
 @api_view(["POST"])
 @permission_classes([permissions.IsAuthenticated,])
@@ -332,6 +311,135 @@ def send_location(request):
                     'message': 'Başarılı',
                     'courier_status': user.durum},
                     status=HTTP_200_OK)
+"""
+
+
+
+@csrf_exempt
+@api_view(["POST"])
+@permission_classes([permissions.IsAuthenticated,])
+def start_working(request):
+    print("-------------send location---------------")
+    pin = request.data.get("pin")
+    latitude = request.data.get("latitude")
+    longitude = request.data.get("longitude")
+    print(token)
+    print(latitude)
+    print(longitude)
+    if not pin or not latitude or not longitude:
+        return Response({'success': 'false',
+                         'message': 'Eksik bilgi gönderildi',
+                         'response' : {
+                         }},
+                         status=HTTP_400_BAD_REQUEST)
+
+    User=get_user_model()
+    try:
+        user_obj = User.objects.filter(pin=pin).first()
+    except:
+        return Response({'success': 'false',
+                         'message': 'Pin kayıtlı değil',
+                         'response' : {
+                         }},
+                         status=HTTP_400_BAD_REQUEST)
+
+    if user.is_active is False:
+        return Response({'success': 'false',
+                         'message': 'Kulanıcı aktif değil',
+                         'response' : {
+                         }},
+                         status=HTTP_400_BAD_REQUEST)
+
+    if user.aktif is False:
+        return Response({'success': 'false',
+                         'message': 'Kullanıcı silinmiş',
+                         'response' : {
+                         }},
+                         status=HTTP_400_BAD_REQUEST)
+
+    # en yakındaki restoranları listele, yoksa boş dön
+    # kayıtlı değilse kayıtlı değil bilgisi dönüyor
+    # not: şu an için hepsini dönüyor, test döneminde bu şekilde 
+    rest_list = get_restlist(latitude=latitude, longitide=longitude, user_id=user.id)
+
+    return Response({'success': 'true',
+                     'message': 'Başarılı',
+                     'response' : {
+                        'restorant_list': rest_list
+                     }},
+                    status=HTTP_200_OK)
+
+
+
+
+
+@csrf_exempt
+@api_view(["POST"])
+@permission_classes([permissions.IsAuthenticated,])
+def select_restorant(request):
+    print("---------select restorant---------------")
+    pin = request.data.get("pin")
+    rest_id = request.data.get("rest_id")
+    print(pin)
+    print(rest_id)
+    if not pin or not rest_id:
+        return Response({'success': 'false',
+                         'message': 'Eksik bilgi gönderildi',
+                         'response' : {
+                         }},
+                         status=HTTP_400_BAD_REQUEST)
+
+    User=get_user_model()
+
+    try:
+        user_obj = User.objects.filter(pin=pin).first()
+    except:
+        return Response({'success': 'false',
+                         'message': 'Pin kayıtlı değil',
+                         'response' : {
+                         }},
+                         status=HTTP_400_BAD_REQUEST)
+
+
+    if user.is_active is False:
+        return Response({'success': 'false',
+                         'message': 'Kullanıcı aktif değil',
+                         'response' : {
+                         }},
+                         status=HTTP_400_BAD_REQUEST)
+
+    if user.aktif is False:
+        return Response({'success': 'false',
+                         'message': 'Kullanıcı silinmiş',
+                         'response' : {
+                         }},
+                         status=HTTP_400_BAD_REQUEST)
+
+
+    rest_obj =  User.objects.filter(id=rest_id).first()
+    firma_adi = rest_obj.firma_adi
+    tel_no = rest_obj.tel_no
+    if rest_obj.allow_self_delivery:
+        allow_self_delivery = "true"
+    else:
+        allow_self_delivery = "false"
+
+    yeni_sira = siraya_gir(rest_obj.id)
+    user_obj.sira = yeni_sira
+    user_obj.aktif_firma = rest_obj.id
+    user_obj.save()
+
+
+    return Response({'success': 'true',
+                     'message': 'Başarılı',
+                     'response' : {
+                        'restorant_name': firma_adi,
+                        'tel_no': tel_no,
+                        'allow_self_delivery': allow_self_delivery,
+                        'queue_order_courier': queue_order
+                     }},
+                     status=HTTP_200_OK)
+    
 
 
 
@@ -665,7 +773,7 @@ def courier_list_details(request):
 @csrf_exempt
 @api_view(["POST"])
 @permission_classes([permissions.AllowAny,])
-def register(request):
+def rest_register(request):
     data = request.data
     username = data.get('username').rstrip()
     email = data.get('email').rstrip()
@@ -714,7 +822,7 @@ def register(request):
 @csrf_exempt
 @api_view(["POST"])
 @permission_classes([permissions.AllowAny,])
-def activate(request):
+def rest_activate(request):
     try:
         activate_token = request.data.get('token')
         uid = request.data.get('uid')
