@@ -35,7 +35,7 @@ urlpatterns = [
     url(r'record_courier_accept', views.record_courier_accept),   
     url(r'^token', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     url(r'^refresh', TokenRefreshView.as_view(), name='token_refresh'),
-    url(r'^pin', views.pin_login, name='pin_login'),
+    url(r'^pin_login', views.pin_login, name='pin_login'),
 
 
 
