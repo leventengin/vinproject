@@ -20,8 +20,8 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 BASE_URL = 'http://127.0.0.1:8000'
 REACT_URL = 'http://127.0.0.1:3000'
 
-#BASE_URL = 'http://185.153.249.94:8000'
-#REACT_URL = 'http://185.153.249.94:3000'
+#BASE_URL = 'http://172.104.246.227:8000'
+#REACT_URL = 'http://172.104.246.227:3000'
 
 
 
