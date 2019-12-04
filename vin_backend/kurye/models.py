@@ -7,6 +7,11 @@ from django.db.models import Q
 from django.contrib.postgres.fields import ArrayField, JSONField
 
 
+
+
+
+
+
 DURUM = (
 ("0", 'Kapalı'),
 ("1", 'Dönüyor'),
@@ -70,10 +75,12 @@ class User(AbstractUser):
     pin = models.CharField(max_length=6, default="")
     kaydolunan_restoranlar = ArrayField(models.IntegerField(), blank=True, null=True)
     device_platform = models.CharField(max_length=1, choices=DEVICE_PLATFORM, default="0")
-    device_id = models.CharField(max_length=10, default="0")
+    device_id = models.CharField(max_length=40, default="0")
     pic_profile = models.ImageField(upload_to='pic_profile/%Y/%m/%d/',blank=True, null=True,)
     def __str__(self):
        return '%s-%s' % (self.first_name, self.last_name)
+
+
 
 
 class AnaFirma(models.Model):
@@ -222,6 +229,8 @@ class Mahalle(models.Model):
 class WSClient(models.Model):
     user = models.ForeignKey(User, related_name='wsclient', on_delete=models.CASCADE)
     channel_name = models.CharField(max_length=200, default="")
+
+
 
 
 

@@ -22,7 +22,7 @@ def calculate_distance(latitude, longitude, rest_latitude, rest_longitude ):
         math.cos(phi1)*math.cos(phi2)*math.sin(dlambda/2)**2
     
     distance = 2*R*math.atan2(math.sqrt(a), math.sqrt(1 - a))
-    print(distance)
+    print("distance", distance)
 
     return distance
 
@@ -54,12 +54,12 @@ def get_rest_list(latitude, longitude, user_id):
                     "kayitli": kayitli }
         list_rest.append(arr_item)
     
-    print("rest_list")
-    print(rest_list)
+    print("list_rest")
+    print(list_rest)
     list_rest.sort(key = lambda x: x.distance)
     print("------------")
-    print(rest_list)
-    return rest_list
+    print(list_rest)
+    return list_rest
 
 
 
@@ -70,7 +70,6 @@ def get_rest_list(latitude, longitude, user_id):
 def siraya_gir(firma_id):
     print("siraya_gir")
     print(firma_id)
-    print(motor_id)
     User=get_user_model()
     motorcu_obj =  User.objects.filter(aktif_firma=firma_id).filter(durum="3").order_by('sira')
     print(motorcu_obj)
@@ -92,7 +91,7 @@ def siraya_gir(firma_id):
 def siradan_cik(firma_id, motorcu_id, sira):
     print("siradan_cik")
     print(firma_id)
-    print(motor_id) 
+    print(motorcu_id) 
     print(sira) 
     User=get_user_model()
     motorcu_obj =  User.objects.filter(aktif_firma=firma_id).filter(durum="3")
@@ -103,6 +102,7 @@ def siradan_cik(firma_id, motorcu_id, sira):
             motorcu.sira = str(sayi)
             motorcu.save()
     return None
+
 
 
 

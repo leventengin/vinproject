@@ -23,16 +23,18 @@ export default function App() {
 
       function gonder(i){
           let y = i*0.001;
-          var lat = 40.970894;
-          var lon = 29.057472;
+          // Göztepe parkı
+          //var lat = 40.970894;
+          //var lon = 29.056185;
+          // CKM
+          var lat = 40.968820;
+          var lon = 29.060562;
           var lat_new = lat + y;
           var lon_new = lon + y;
           var msg = {
               type: "send_location",
-              latitude: lat_new,
-              longitude:lon_new,
-              rid:"2",
-              i:i
+              latitude: lat,
+              longitude:lon,
             };
             console.log(i)
            if (ws.readyState === WebSocket.OPEN) {
@@ -75,7 +77,7 @@ export default function App() {
 
       const AuthContext = createContext();
 
-      const token = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ0b2tlbl90eXBlIjoicmVmcmVzaCIsImV4cCI6MTU3NTAxNTg1NywianRpIjoiODFmYWE5M2FjYjI3NDg1MDk3MDE4YjkxNjBkNDM0YjciLCJ1c2VyX2lkIjoyfQ.8orH-7qsMUgxedF9M1w54rM3sWgxWzFC_Iw6QPSLtVs";
+      const token = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ0b2tlbl90eXBlIjoicmVmcmVzaCIsImV4cCI6MTU3Njc2MjEzNCwianRpIjoiY2RmZDRiYTFkNGVkNDg4ZmFmNWE1ZTAwZGQzNTg3MjEiLCJ1c2VyX2lkIjoyfQ.OjfRSQTE_e12yGu2gnUUe69GcPh2e7kv_hxaxxs6yRc";
       let newToken = retrieveToken(token)
       //const newToken = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNTc0OTQ3NzkxLCJqdGkiOiIwNWM4MjhjZTUzMjY0YmRhYjY5YWIxYjJmNmNmZDMxMiIsInVzZXJfaWQiOjJ9.dtFi9MB71ug3OvUb04NTA6GFQPnjVuRSkSFovsqNLSU";
       console.log(newToken);
@@ -85,6 +87,11 @@ export default function App() {
 
       console.log("state of ws-1 ");
       console.log(ws.readyState);
+
+      ws.onmessage = function (event) {
+          console.log(event.data);
+        }
+
 
       ws.onopen = () => {
          console.log("WebSocket now open...");

@@ -37,6 +37,8 @@ from django.http import JsonResponse
 import requests
 from django.urls import reverse
 import json 
+from .restlist import siraya_gir, siradan_cik, get_rest_list, calculate_distance
+
 
 
 
@@ -106,7 +108,7 @@ def pin_login(request):
                          status=HTTP_400_BAD_REQUEST)
     
     new_password = _pw()
-    print("new password", new_password)
+    #print("new password", new_password)
     user.set_password(new_password)
     user.save()
 
@@ -131,7 +133,7 @@ def pin_login(request):
 @api_view(["POST"])
 @permission_classes([permissions.AllowAny,])
 def rest_login(request):
-    print("-------------login---------------")
+    print("-------------restorant login---------------")
     username_or_email = request.data.get("username_or_email").rstrip()
     password = request.data.get("password")
     print(username_or_email)
@@ -204,28 +206,9 @@ def rest_login(request):
 @permission_classes([permissions.AllowAny,])
 def courier_get_self_data(request):
     print("-------------login_courier---------------")
-    pin = request.data.get("pin")
-    platform = request.data.get("device_platform")
-    device_id = request.data.get("device_id")
-    print(pin)
-    print(platform)
-    print(device_id)
-    if not pin or not platform or not device_id:
-        return Response({'success': 'false',
-                         'message': 'Eksik bilgi gönderildi',
-                         'response' : {
-                         }},
-                         status=HTTP_400_BAD_REQUEST)
 
-    User=get_user_model()
-    try:
-        user = User.objects.get(pin=pin)
-    except:
-        return Response({'success': 'false',
-                         'message': 'Pin bulunamadı',
-                         'response' : {
-                         }},
-                         status=HTTP_400_BAD_REQUEST)
+    user = request.user
+    print(user)
 
     if user.is_active is False:
         return Response({'success': 'false',
@@ -241,7 +224,7 @@ def courier_get_self_data(request):
                          }},
                          status=HTTP_400_BAD_REQUEST)
 
-
+ 
     print("here is pic_profile:", user.pic_profile)
     if user.pic_profile:
         pic_profile = BASE_URL + user.pic_profile.url
@@ -319,29 +302,19 @@ def send_location(request):
 @api_view(["POST"])
 @permission_classes([permissions.IsAuthenticated,])
 def start_working(request):
-    print("-------------send location---------------")
-    pin = request.data.get("pin")
+    print("-------------start working---------------")
     latitude = request.data.get("latitude")
     longitude = request.data.get("longitude")
-    print(token)
     print(latitude)
     print(longitude)
-    if not pin or not latitude or not longitude:
+    if not latitude or not longitude:
         return Response({'success': 'false',
                          'message': 'Eksik bilgi gönderildi',
                          'response' : {
                          }},
                          status=HTTP_400_BAD_REQUEST)
 
-    User=get_user_model()
-    try:
-        user_obj = User.objects.filter(pin=pin).first()
-    except:
-        return Response({'success': 'false',
-                         'message': 'Pin kayıtlı değil',
-                         'response' : {
-                         }},
-                         status=HTTP_400_BAD_REQUEST)
+    user = request.user
 
     if user.is_active is False:
         return Response({'success': 'false',
@@ -360,7 +333,8 @@ def start_working(request):
     # en yakındaki restoranları listele, yoksa boş dön
     # kayıtlı değilse kayıtlı değil bilgisi dönüyor
     # not: şu an için hepsini dönüyor, test döneminde bu şekilde 
-    rest_list = get_restlist(latitude=latitude, longitide=longitude, user_id=user.id)
+    
+    rest_list = get_rest_list(latitude=latitude, longitide=longitude, user_id=user.id)
 
     return Response({'success': 'true',
                      'message': 'Başarılı',
@@ -372,34 +346,22 @@ def start_working(request):
 
 
 
-
 @csrf_exempt
 @api_view(["POST"])
 @permission_classes([permissions.IsAuthenticated,])
 def select_restorant(request):
     print("---------select restorant---------------")
-    pin = request.data.get("pin")
     rest_id = request.data.get("rest_id")
-    print(pin)
     print(rest_id)
-    if not pin or not rest_id:
+    if not rest_id:
         return Response({'success': 'false',
                          'message': 'Eksik bilgi gönderildi',
                          'response' : {
                          }},
                          status=HTTP_400_BAD_REQUEST)
 
-    User=get_user_model()
 
-    try:
-        user_obj = User.objects.filter(pin=pin).first()
-    except:
-        return Response({'success': 'false',
-                         'message': 'Pin kayıtlı değil',
-                         'response' : {
-                         }},
-                         status=HTTP_400_BAD_REQUEST)
-
+    user = request.user
 
     if user.is_active is False:
         return Response({'success': 'false',
@@ -415,7 +377,7 @@ def select_restorant(request):
                          }},
                          status=HTTP_400_BAD_REQUEST)
 
-
+    User=get_user_model() 
     rest_obj =  User.objects.filter(id=rest_id).first()
     firma_adi = rest_obj.firma_adi
     tel_no = rest_obj.tel_no
@@ -436,7 +398,7 @@ def select_restorant(request):
                         'restorant_name': firma_adi,
                         'tel_no': tel_no,
                         'allow_self_delivery': allow_self_delivery,
-                        'queue_order_courier': queue_order
+                        'queue_order_courier': yeni_sira
                      }},
                      status=HTTP_200_OK)
     

@@ -19,7 +19,7 @@ class MyUserAdmin(UserAdmin):
     search_fields = UserAdmin.search_fields+('durum',)
     # Yeni alanlar
     fieldsets = UserAdmin.fieldsets + (
-            (None, {'fields': ('tipi', 'durum', 'enlem', 'boylam', 'aktif', 'tel_no', 'pin', 'device_platform', 'device_id', 'pic_profile')}),
+            (None, {'fields': ('tipi', 'durum', 'aktif_firma', 'enlem', 'boylam', 'aktif', 'tel_no', 'pin', 'device_platform', 'device_id', 'pic_profile')}),
     )
 
 
