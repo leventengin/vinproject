@@ -16,9 +16,9 @@
 */
 
 //const API_BASE_URL="http://localhost:8000/";
-const API_BASE_URL="http://127.0.0.1:8000/";
-//const API_BASE_URL="http://185.153.249.94:8000/";
-
+//const API_BASE_URL="http://127.0.0.1:8000/";
+const API_BASE_URL="http://172.104.246.227:8000/";
+const WS_BASE_URL="ws://172.104.246.227:8000/";
 // ##############################
 // // // Function that converts from hex color to rgb color
 // // // Example: input = #9c27b0 => output = 156, 39, 176
@@ -384,6 +384,7 @@ const cardLink = {
 
 export {
   API_BASE_URL,
+  WS_BASE_URL,
   hexToRgb,
   //variables
   drawerWidth,

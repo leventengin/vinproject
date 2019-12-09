@@ -38,7 +38,7 @@ import requests
 from django.urls import reverse
 import json 
 from .restlist import siraya_gir, siradan_cik, get_rest_list, calculate_distance
-
+from django_user_agents.utils import get_user_agent
 
 
 
@@ -74,9 +74,14 @@ class FirmaViewSet(viewsets.ModelViewSet):
 def pin_login(request):
     print("-------------pin login---------------")
     pin = request.data.get("pin").rstrip()
+    
+    user_agent = get_user_agent(request)
+    print("user-agent")
+    print(user_agent)
+
     print(pin)
     if not pin:
-        return Response({'success': 'false',
+        return Response({'success': False,
                          'message': 'Pin girilmemiş',
                          'response' : {
                          }},
@@ -87,21 +92,21 @@ def pin_login(request):
     try:
         user = User.objects.get(pin=pin)
     except:
-        return Response({'success': 'false',
+        return Response({'success': False,
                          'message': 'Pin tanımlı değil',
                          'response' : {
                          }},
                          status=HTTP_400_BAD_REQUEST)
 
     if user.is_active is False:
-        return Response({'success': 'false',
+        return Response({'success': False,
                          'message': 'Kullanıcı aktif değil',
                          'response' : {
                          }},
                          status=HTTP_400_BAD_REQUEST)
 
     if user.aktif is False:
-        return Response({'success': 'false',
+        return Response({'success': False,
                          'message': 'Hesap kapalı',
                          'response' : {
                          }},
@@ -139,7 +144,7 @@ def rest_login(request):
     print(username_or_email)
     print(password)
     if not username_or_email or not password:
-        return Response({'success': 'false',
+        return Response({'success': False,
                          'message': 'Lütfen kullanıcı adı ve parola giriniz',
                          'response' : {
                          }},
@@ -148,7 +153,7 @@ def rest_login(request):
     if '@' in username_or_email:
         pass
     else:
-        return Response({'success': 'false',
+        return Response({'success': False,
                          'message': 'Lütfen eposta hesabı giriniz',
                          'response' : {
                          }},
@@ -158,7 +163,7 @@ def rest_login(request):
     try:
         user = User.objects.get(email=username_or_email)
     except:
-        return Response({'success': 'false',
+        return Response({'success': False,
                          'message': 'Kullanıcı adı hatalı',
                          'response' : {
                          }},
@@ -166,14 +171,14 @@ def rest_login(request):
 
     check_password = user.check_password(password)
     if not check_password:
-        return Response({'success': 'false',
+        return Response({'success': False,
                          'message': 'Parola hatalı',
                          'response' : {
                          }},
                          status=HTTP_400_BAD_REQUEST)
 
     if user.is_active is False:
-        return Response({'success': 'false',
+        return Response({'success': False,
                          'message': 'Hesap aktif değil',
                          'response' : {
                             'courier_status': ''
@@ -181,7 +186,7 @@ def rest_login(request):
                          status=HTTP_400_BAD_REQUEST)
 
     if user.aktif is False:
-        return Response({'success': 'false',
+        return Response({'success': False,
                          'message': 'Hesap kapalı',
                          'response' : {
                             'courier_status': ''
@@ -195,7 +200,20 @@ def rest_login(request):
         pic_profile = BASE_URL + user.pic_profile.url
     else:
         pic_profile = ""
-    return Response({'user_id': user.id, 'pic_profile': pic_profile, 'username': user.username, 'first_name': user.first_name, 'last_name': user.last_name,  'email': user.email}, status=HTTP_200_OK)
+    return Response({'success': True,
+                    'message': 'Başarılı login',
+                    'response': {
+                        'restaurant':
+                            {
+                                'user_id': user.id, 
+                                'pic_profile': pic_profile, 
+                                'username': user.username, 
+                                'first_name': user.first_name, 
+                                'last_name': user.last_name,  
+                                'email': user.email}, 
+                            }
+                    },
+                    status=HTTP_200_OK)
 
 
 
@@ -211,14 +229,14 @@ def courier_get_self_data(request):
     print(user)
 
     if user.is_active is False:
-        return Response({'success': 'false',
+        return Response({'success': False,
                          'message': 'Kullanıcı aktif değil',
                          'response' : {
                          }},
                          status=HTTP_400_BAD_REQUEST)
 
     if user.aktif is False:
-        return Response({'success': 'false',
+        return Response({'success': False,
                          'message': 'Kullanıcı silinmiş',
                          'response' : {
                          }},
@@ -230,7 +248,7 @@ def courier_get_self_data(request):
         pic_profile = BASE_URL + user.pic_profile.url
     else:
         pic_profile = ""
-    return Response({'success': 'true',
+    return Response({'success': True,
                     'message': 'Başarılı login',
                     'response':{
                             'courier': { 'user_id': user.id,
@@ -308,7 +326,7 @@ def start_working(request):
     print(latitude)
     print(longitude)
     if not latitude or not longitude:
-        return Response({'success': 'false',
+        return Response({'success': False,
                          'message': 'Eksik bilgi gönderildi',
                          'response' : {
                          }},
@@ -317,14 +335,14 @@ def start_working(request):
     user = request.user
 
     if user.is_active is False:
-        return Response({'success': 'false',
+        return Response({'success': False,
                          'message': 'Kulanıcı aktif değil',
                          'response' : {
                          }},
                          status=HTTP_400_BAD_REQUEST)
 
     if user.aktif is False:
-        return Response({'success': 'false',
+        return Response({'success': False,
                          'message': 'Kullanıcı silinmiş',
                          'response' : {
                          }},
@@ -336,7 +354,7 @@ def start_working(request):
     
     rest_list = get_rest_list(latitude=latitude, longitide=longitude, user_id=user.id)
 
-    return Response({'success': 'true',
+    return Response({'success': True,
                      'message': 'Başarılı',
                      'response' : {
                         'restorant_list': rest_list
@@ -354,7 +372,7 @@ def select_restorant(request):
     rest_id = request.data.get("rest_id")
     print(rest_id)
     if not rest_id:
-        return Response({'success': 'false',
+        return Response({'success': False,
                          'message': 'Eksik bilgi gönderildi',
                          'response' : {
                          }},
@@ -364,14 +382,14 @@ def select_restorant(request):
     user = request.user
 
     if user.is_active is False:
-        return Response({'success': 'false',
+        return Response({'success': False,
                          'message': 'Kullanıcı aktif değil',
                          'response' : {
                          }},
                          status=HTTP_400_BAD_REQUEST)
 
     if user.aktif is False:
-        return Response({'success': 'false',
+        return Response({'success': False,
                          'message': 'Kullanıcı silinmiş',
                          'response' : {
                          }},
@@ -392,13 +410,15 @@ def select_restorant(request):
     user_obj.save()
 
 
-    return Response({'success': 'true',
+    return Response({'success': True,
                      'message': 'Başarılı',
                      'response' : {
-                        'restorant_name': firma_adi,
-                        'tel_no': tel_no,
-                        'allow_self_delivery': allow_self_delivery,
-                        'queue_order_courier': yeni_sira
+                         'restaurant': {
+                            'restaurant_name': firma_adi,
+                            'tel_no': tel_no,
+                            'allow_self_delivery': allow_self_delivery,
+                            'queue_order_courier': yeni_sira
+                         }
                      }},
                      status=HTTP_200_OK)
     
@@ -639,7 +659,7 @@ def record_courier_accept(request):
 @api_view(["POST"])
 @permission_classes([permissions.AllowAny,])
 def courier_list_details(request):
-    print("-------------register_courier---------------")
+    print("-------------courier list details ---------------")
     token = request.data.get("token")
     name = request.data.get("name")
     family_name = request.data.get("family_name")
@@ -800,6 +820,388 @@ def rest_activate(request):
         return Response("error", status=HTTP_400_BAD_REQUEST)
 
 
+@csrf_exempt
+@api_view(["POST"])
+@permission_classes([permissions.IsAuthenticated,])
+def create_delivery(request):
+    print("-------------create delivery---------------")
+    address_list = request.data.get("address_list")
+    count = request.data.get("count")
+    courier_id = request.data.get("courier_id")
+    print(address_list)
+    print(count)
+    print(courier_id)
+    if not address_list or not count  or not courier_id:
+        return Response({'success': False,
+                         'message': 'Eksik bilgi gönderildi',
+                         'response' : {
+                         }},
+                         status=HTTP_400_BAD_REQUEST)
+
+    user = request.user
+
+    if user.is_active is False:
+        return Response({'success': False,
+                         'message': 'Kulanıcı aktif değil',
+                         'response' : {
+                         }},
+                         status=HTTP_400_BAD_REQUEST)
+
+    if user.aktif is False:
+        return Response({'success': False,
+                         'message': 'Kullanıcı silinmiş',
+                         'response' : {
+                         }},
+                         status=HTTP_400_BAD_REQUEST)
+
+
+    # not: restorandan gelen bilgilere göre yeni bir teslimat ve ilişkili işlemler yarat 
+    
+    tesl_obj = Teslimat.objects.create( firma=user,
+                                        kurye_id=courier_id,
+                                        adet=count,
+                                        gecerli_adet=count
+                                        )
+
+    for address in address_list:
+        islem_obj = IslemTeslimat.objects.create(teslimat=tesl_obj,
+                                                tel_no=address.tel_no,
+                                                address=address.address
+                                                )
+
+
+    #
+    # sonrasında Push Notification gönder.....
+    #
+
+
+    return Response({'success': True,
+                     'message': 'Başarılı',
+                     'response' : {
+                        'delivery_id': tesl_obj.id
+                     }},
+                    status=HTTP_200_OK)
+
+
+
+
+@csrf_exempt
+@api_view(["POST"])
+@permission_classes([permissions.IsAuthenticated,])
+def update_delivery(request):
+    print("-------------update delivery---------------")
+    delivery_id = request.data.get("delivery_id")
+    address_list = request.data.get("address_list")
+    count = request.data.get("count")
+    courier_id = request.data.get("courier_id")
+    print(delivery_id)
+    print(address_list)
+    print(count)
+    print(courier_id)
+    if not delivery_id or not address_list or not count  or not courier_id:
+        return Response({'success': False,
+                         'message': 'Eksik bilgi gönderildi',
+                         'response' : {
+                         }},
+                         status=HTTP_400_BAD_REQUEST)
+
+    user = request.user
+
+    if user.is_active is False:
+        return Response({'success': False,
+                         'message': 'Kulanıcı aktif değil',
+                         'response' : {
+                         }},
+                         status=HTTP_400_BAD_REQUEST)
+
+    if user.aktif is False:
+        return Response({'success': False,
+                         'message': 'Kullanıcı silinmiş',
+                         'response' : {
+                         }},
+                         status=HTTP_400_BAD_REQUEST)
+
+
+    # not: restorandan gelen bilgilere göre teslimat ve işlemleri düzenle(update) 
+    
+    tesl_obj = Teslimat.objects.filter(id=delivery_id).first()
+    if not tesl_obj:
+        return Response({'success': False,
+                         'message': 'Teslimat kaydı yok',
+                         'response' : {
+                         }},
+                         status=HTTP_400_BAD_REQUEST)
+
+
+    tesl_obj = Teslimat.objects.save(id=delivery_id,
+                                        firma=user,
+                                        kurye_id=courier_id,
+                                        adet=count,
+                                        gecerli_adet=count
+                                        )
+
+    islem_obj = IslemTeslimat.objects.filter(teslimat=tesl_obj)
+    if islem_obj:
+        for islem in islem_obj:
+            islem.delete()
+
+    for address in address_list:
+        islem_obj = IslemTeslimat.objects.create(teslimat=tesl_obj,
+                                                tel_no=address.tel_no,
+                                                address=address.address
+                                                )
+
+
+    #
+    # sonrasında Push Notification gönder.....
+    #
+
+
+    return Response({'success': True,
+                     'message': 'Başarılı',
+                     'response' : {
+                        'delivery_id': tesl_obj.id
+                     }},
+                    status=HTTP_200_OK)
+
+
+
+@csrf_exempt
+@api_view(["POST"])
+@permission_classes([permissions.IsAuthenticated,])
+def delivery_approve_reject(request):
+    print("-------------update delivery---------------")
+    delivery_id = request.data.get("delivery_id")
+    state = request.data.get("state")
+    print(delivery_id)
+    print(state)
+    if not delivery_id or not state:
+        return Response({'success': False,
+                         'message': 'Eksik bilgi gönderildi',
+                         'response' : {
+                         }},
+                         status=HTTP_400_BAD_REQUEST)
+
+    user = request.user
+
+    if user.is_active is False:
+        return Response({'success': False,
+                         'message': 'Kulanıcı aktif değil',
+                         'response' : {
+                         }},
+                         status=HTTP_400_BAD_REQUEST)
+
+    if user.aktif is False:
+        return Response({'success': False,
+                         'message': 'Kullanıcı silinmiş',
+                         'response' : {
+                         }},
+                         status=HTTP_400_BAD_REQUEST)
+
+
+    # not: id'ye göre teslimat ve işlem bilgilerini al 
+    
+    tesl_obj = Teslimat.objects.filter(id=delivery_id).first()
+    if not tesl_obj:
+        return Response({'success': False,
+                         'message': 'Teslimat kaydı yok',
+                         'response' : {
+                         }},
+                         status=HTTP_400_BAD_REQUEST)
+
+
+    islem_obj = IslemTeslimat.objects.filter(teslimat=tesl_obj)
+    if not islem_obj:
+        return Response({'success': False,
+                         'message': 'Teslimat detay kaydı yok',
+                         'response' : {
+                         }},
+                         status=HTTP_400_BAD_REQUEST)
+
+    address_list = {}
+    address_item = {}
+
+    for islem in islem_obj:
+        address_item = {"process_id": islem.id, 
+                        "address": islem.address, 
+                        "tel_no": islem.tel_no,}
+        address_list.append(address_item)
+
+    print(address_list)
+
+    return Response({'success': True,
+                     'message': 'Başarılı',
+                     'response' : {
+                        'address_list': address_list,
+                        'count': tesl_obj.adet,
+                     }},
+                    status=HTTP_200_OK)
+
+
+
+@csrf_exempt
+@api_view(["POST"])
+@permission_classes([permissions.IsAuthenticated,])
+def delivery_process(request):
+    print("-------------update delivery---------------")
+    delivery_id = request.data.get("delivery_id")
+    process_id = request.data.get("process_id")
+    process_id_next = request.data.get("process_id_next")    
+    restaurant_id = request.data.get("restaurant_id")
+    process_type = request.data.get("process_type")
+    nondelivery_reason = request.data.get("nondelivery_reason")
+    nonpayment_reason = request.data.get("nonpayment_reason")
+    sos_reason = request.data.get("sos_reason")
+    soscancel_result = request.data.get("soscancel_result")
+    print(delivery_id)
+    print(process_id)
+    print(process_id_next)
+    print(restaurant_id)
+    print(process_type)
+    print(nondelivery_reason)
+    print(nonpayment_reason)
+    print(sos_reason)
+    print(soscancel_result)
+
+
+    if not delivery_id or not process_id or not restaurant_id or not process_type:
+        return Response({'success': False,
+                         'message': 'Eksik bilgi gönderildi',
+                         'response' : {
+                         }},
+                         status=HTTP_400_BAD_REQUEST)
+
+    user = request.user
+
+    if user.is_active is False:
+        return Response({'success': False,
+                         'message': 'Kulanıcı aktif değil',
+                         'response' : {
+                         }},
+                         status=HTTP_400_BAD_REQUEST)
+
+    if user.aktif is False:
+        return Response({'success': False,
+                         'message': 'Kullanıcı silinmiş',
+                         'response' : {
+                         }},
+                         status=HTTP_400_BAD_REQUEST)
+
+
+    # not: id'ye göre teslimat ve işlem bilgilerini al 
+    
+    tesl_obj = Teslimat.objects.filter(id=delivery_id).first()
+    if not tesl_obj:
+        return Response({'success': False,
+                         'message': 'Teslimat kaydı yok',
+                         'response' : {
+                         }},
+                         status=HTTP_400_BAD_REQUEST)
+
+
+    islem_obj = IslemTeslimat.objects.filter(id=process_id).first()
+    if not islem_obj:
+        return Response({'success': False,
+                         'message': 'Teslimat detay kaydı yok',
+                         'response' : {
+                         }},
+                         status=HTTP_400_BAD_REQUEST)
+
+    #
+    # burada gelen bilgiye göre teslimat işlemini gerçekleştir.
+    # müşteriye SMS çek, SOS se teslimat dosyasında,
+    # diğerlerinde ise Teslimat dosyasında kayıtları düzenle
+    #
+
+    if process_type == "1":
+        print("case-1")
+        islem_obj.islem_tipi = process_type
+        islem_obj.save()
+        count = tesl_obj.adet
+        count = count -1
+        tesl_obj.adet = count
+        tesl_obj.save()
+        if count > 1: 
+            # burada bir sonraki sıradaki kişiye SMS at
+            pass
+        else: 
+            user.durum = "3"
+            user.save()
+
+    elif process_type == "2":
+        print("case-2")
+        islem_obj.islem_tipi = process_type
+        islem_obj.odeme_alinmadi_sebep = nonpayment_reason
+        islem_obj.save()
+        count = tesl_obj.adet
+        count = count -1
+        tesl_obj.adet = count
+        tesl_obj.save()
+        if count > 1: 
+            # burada bir sonraki sıradaki kişiye SMS at
+            pass
+        else: 
+            user.durum = "3"
+            user.save()
+
+
+    elif process_type == "3":
+        print("case-3")
+        islem_obj.islem_tipi = process_type
+        islem_obj.teslim_edilmedi_sebep = nondelivery_reason
+        islem_obj.save()
+        count = tesl_obj.gecerli_adet
+        count = count -1
+        tesl_obj.gecerli_adet = count
+        tesl_obj.save()
+        if count > 1: 
+            # burada bir sonraki sıradaki kişiye SMS at
+            pass
+        else: 
+            user.durum = "3"
+            user.save()
+
+
+
+    elif process_type == "4":
+        print("case-4")
+        islem_obj.islem_tipi = process_type
+        islem_obj.sos_sebep = sos_reason
+        islem_obj.save()
+        user.durum = "4"
+        user.save()
+        #
+        # burada çalışılan restorana bildirim at
+        #
+
+    elif process_type == "5":
+        print("case-4")
+        islem_obj.islem_tipi = process_type
+        islem_obj.sos_kaldir_sonuc = soscancel_result
+        islem_obj.save()
+        user.durum = "5"
+        user.save()
+        #
+        # burada çalışılan restorana bildirim at
+        #
+
+    else:
+        return Response({'success': False,
+                         'message': 'İşlem tipi yanlış, kayıt dışı',
+                         'response' : {
+                         }},
+                         status=HTTP_400_BAD_REQUEST)
+    
+
+
+    return Response({'success': True,
+                     'message': 'Başarılı',
+                     'response' : {
+                        'courier_state': user.durum,
+                        'package_count': tesl_obj.adet,
+                     }},
+                    status=HTTP_200_OK)
+
 
 
 
@@ -846,3 +1248,5 @@ class ReactAppView(View):
                 status=501,
             )
 # Create your views here.
+
+

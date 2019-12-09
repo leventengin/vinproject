@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import User, Firma, AnaFirma, Teslimat, Islemler, Bildirim, Bahsis, ArtiMotorcu
+from .models import User, Firma, AnaFirma, Teslimat, IslemTeslimat, Bildirim, Bahsis, ArtiMotorcu
 from .models import FaturaDetay, FaturaToplam, Fiyat, EkFiyat, Il, Ilce, Mahalle
 from django.contrib.auth.forms import UserChangeForm, UserCreationForm
 from django.contrib.auth.admin import UserAdmin
@@ -43,7 +43,7 @@ admin.site.register(User, MyUserAdmin)# Register your models here.
 admin.site.register(Firma)
 admin.site.register(AnaFirma)
 admin.site.register(Teslimat)
-admin.site.register(Islemler)
+admin.site.register(IslemTeslimat)
 admin.site.register(Bildirim)
 admin.site.register(Bahsis)
 admin.site.register(ArtiMotorcu)

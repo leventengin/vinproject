@@ -14,12 +14,13 @@ from django.contrib.postgres.fields import ArrayField, JSONField
 
 DURUM = (
 ("0", 'Kapalı'),
-("1", 'Dönüyor'),
-("2", 'Gidiyor'),
-("3", 'Sırada'),
+("1", 'Sırada'),
+("2", 'Serviste'),
+("3", 'Dönüşte'),
 ("4", 'Sıradan Çıkmış'),
 ("5", 'SOS'),
 )
+
 
 KULLANICI_TIPI = (
 ("0", 'Motorcu'),
@@ -29,17 +30,29 @@ KULLANICI_TIPI = (
 )
 
 BILDIRIM_TIPI = (
-("0", 'SOS'),
+("0", 'Sipariş var'),    
+("1", 'SOS'),
 )
 
-TESLIM_EDILMEDI = (
+
+ISLEM_TIPI = (
+("O", 'İşlem yapılmadı, başlangıç'), 
+("1", 'Teslim edildi'),
+("2", 'Ödeme alınamadı, teslim edildi'),
+("3", 'Teslim edilemedi'),
+("4", 'SOS'),
+("5", 'SOS kaldır'),
+)
+
+
+TESLIM_EDILEMEDI = (
 ("0", 'Müşteri istemedi'),
 ("1", 'Müşteri yerinde yok'),
 ("2", 'Adresi bulamadım'),
 ("3", 'Diğer'),
 )
 
-ODEME_ALINMADI = (
+ODEME_ALINAMADI = (
 ("0", 'POS kaynaklı'),
 ("1", 'Para üstü yok'),
 ("2", 'Müşteride para yok'),
@@ -52,6 +65,11 @@ SOS_SEBEP = (
 ("2", 'Benzin'),
 ("3", 'Çevirme'),
 ("4", 'Diğer'),
+)
+
+SOS_KALDIR = (
+("0", 'Devam'),
+("1", 'Ger, dön')
 )
 
 DEVICE_PLATFORM = (
@@ -117,29 +135,32 @@ class Firma(models.Model):
 
 
 class Teslimat(models.Model):
-    user = models.ForeignKey(User, related_name='teslimat', on_delete=models.PROTECT)
+    kurye = models.ForeignKey(User, related_name='teslimat', blank=True, null=True, on_delete=models.PROTECT)
     firma = models.ForeignKey(Firma, related_name='teslimat_firma', on_delete=models.PROTECT)
+    onay = models.BooleanField(default=True)
+    adet = models.PositiveIntegerField(default=0)
+    gecerli_adet = models.PositiveIntegerField(default=0)
     zaman = models.DateTimeField(auto_now=True)
-    teslim_edildi = models.BooleanField(blank=True)
-    odeme_alindi = models.BooleanField(blank=True)
+    def __str__(self):
+       return self.user
+
+
+
+
+class IslemTeslimat(models.Model):
+    teslimat = models.ForeignKey(Teslimat, related_name='teslimat', on_delete=models.PROTECT)
+    islem_tipi = models.CharField(max_length=2, default="0")
+    tel_no: models.CharField(max_length=10, default="")
+    address = models.CharField(max_length=200)
     teslim_edilmedi_sebep = models.CharField(max_length=2, default="0")
     odeme_alinmadi_sebep = models.CharField(max_length=2, default="0")
-    odeme_alinmadi_sebep_adi = models.CharField(max_length=20,)
-    odeme_alinmadi_sebep_soyadi = models.CharField(max_length=20)
-    odeme_alinmadi_sebep_tel = models.CharField(max_length=12)
-    odeme_alinmadi_sebep_adres = models.CharField(max_length=60)
-    def __str__(self):
-       return self.user
-
-
-class Islemler(models.Model):
-    user = models.ForeignKey(User, related_name='islem', on_delete=models.PROTECT)
-    firma = models.ForeignKey(Firma, related_name='islem_firma', on_delete=models.PROTECT)
-    zaman = models.DateTimeField(auto_now=True)
-    islem = models.CharField(max_length=2, default="0")
     sos_sebep = models.CharField(max_length=2, default="0")
+    sos_kaldir_sonuc = models.CharField(max_length=2, default="0")
+    zaman = models.DateTimeField(auto_now=True)
     def __str__(self):
        return self.user
+
+
 
 
 class Bildirim(models.Model):
@@ -149,6 +170,7 @@ class Bildirim(models.Model):
     timestamp = models.DateTimeField(auto_now=True)
     def __str__(self):
         return '%s-%s' % (self.user, self.timestamp)
+
 
 
 class Bahsis(models.Model):

@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'kurye',
+    'django_user_agents',
     'rest_framework',
     'rest_framework.authtoken',
     'corsheaders',
@@ -69,6 +70,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'django.middleware.locale.LocaleMiddleware',
+    'django_user_agents.middleware.UserAgentMiddleware',
     #"allauth.account.context_processors.account",
     #"allauth.socialaccount.context_processors.socialaccount",
 ]

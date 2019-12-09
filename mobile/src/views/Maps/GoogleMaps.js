@@ -153,7 +153,7 @@ export default function GoogleMaps() {
           </CardHeader>
           <CardBody>
             <SatelliteMap
-              googleMapURL="https://maps.googleapis.com/maps/api/js?key=YOUR_KEY_HERE"
+              googleMapURL="https://maps.googleapis.com/maps/api/js?key=AIzaSyC_Znboqzu8BoOskHpcrA41mAMJXGVDQeE"
               loadingElement={<div style={{ height: `100%` }} />}
               containerElement={
                 <div
@@ -179,7 +179,7 @@ export default function GoogleMaps() {
           </CardHeader>
           <CardBody>
             <RegularMap
-              googleMapURL="https://maps.googleapis.com/maps/api/js?key=YOUR_KEY_HERE"
+              googleMapURL="https://maps.googleapis.com/maps/api/js?key=AIzaSyC_Znboqzu8BoOskHpcrA41mAMJXGVDQeE"
               loadingElement={<div style={{ height: `100%` }} />}
               containerElement={
                 <div
@@ -207,7 +207,7 @@ export default function GoogleMaps() {
           </CardHeader>
           <CardBody>
             <CustomSkinMap
-              googleMapURL="https://maps.googleapis.com/maps/api/js?key=YOUR_KEY_HERE"
+              googleMapURL="https://maps.googleapis.com/maps/api/js?key=AIzaSyC_Znboqzu8BoOskHpcrA41mAMJXGVDQeE"
               loadingElement={<div style={{ height: `100%` }} />}
               containerElement={
                 <div

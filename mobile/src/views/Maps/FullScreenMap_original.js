@@ -5,12 +5,15 @@ import {
   GoogleMap,
   Marker
 } from "react-google-maps";
+import IconButton from '@material-ui/core/IconButton';
+import DeleteIcon from '@material-ui/icons/Delete';
+
 
 const CustomSkinMap = withScriptjs(
   withGoogleMap(() => (
     <GoogleMap
       defaultZoom={13}
-      defaultCenter={{ lat: 40.987560, lng: 29.035414 }}
+      defaultCenter={{ lat: 40.748817, lng: -73.985428 }}
       defaultOptions={{
         scrollwheel: false,
         zoomControl: true,
@@ -76,12 +79,13 @@ const CustomSkinMap = withScriptjs(
         ]
       }}
     >
-      <Marker position={{ lat: 40.987560, lng: 29.035414 }} />
+      <Marker position={{ lat: 40.748817, lng: -73.985428 }} />
     </GoogleMap>
   ))
 );
 
 export default function FullScreenMap() {
+
   return (
     <CustomSkinMap
       googleMapURL="https://maps.googleapis.com/maps/api/js?key=AIzaSyC_Znboqzu8BoOskHpcrA41mAMJXGVDQeE"
@@ -89,5 +93,6 @@ export default function FullScreenMap() {
       containerElement={<div style={{ height: `100vh` }} />}
       mapElement={<div style={{ height: `100%` }} />}
     />
+
   );
 }

@@ -11,7 +11,7 @@ import AdminLayout from "layouts/Admin.js";
 import "assets/scss/material-dashboard-pro-react.scss?v=1.8.0";
 import { createContext, useContext } from 'react';
 import io from 'socket.io-client/dist/socket.io';
-import {API_BASE_URL} from "assets/jss/material-dashboard-pro-react";
+import {API_BASE_URL, WS_BASE_URL} from "assets/jss/material-dashboard-pro-react";
 
 import PrivateRoute from './PrivateRoute';
 
@@ -77,11 +77,47 @@ export default function App() {
 
       const AuthContext = createContext();
 
+      var navigator_info = window.navigator;
+      var screen_info = window.screen;
+      console.log(navigator_info);
+      console.log(screen_info);
+
+      var options = {
+        enableHighAccuracy: true,
+        timeout: 5000,
+        maximumAge: 0
+      };
+
+      function success(pos) {
+        var crd = pos.coords;
+        console.log('Your current position is:');
+        console.log(`Latitude : ${crd.latitude}`);
+        console.log(`Longitude: ${crd.longitude}`);
+        console.log(`More or less ${crd.accuracy} meters.`);
+      }
+
+      function error(err) {
+        console.warn(`ERROR(${err.code}): ${err.message}`);
+      }
+
+      async function get_geo(){
+        await navigator.geolocation.getCurrentPosition(success, error, options);
+      }
+
+      const geo = navigator.geolocation;
+      if (!geo) {
+        console.log("Geolocation is not supported");
+      } else {
+        console.log("yes geolocation");
+        //get_geo();
+      }
+
       const token = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ0b2tlbl90eXBlIjoicmVmcmVzaCIsImV4cCI6MTU3Njc2MjEzNCwianRpIjoiY2RmZDRiYTFkNGVkNDg4ZmFmNWE1ZTAwZGQzNTg3MjEiLCJ1c2VyX2lkIjoyfQ.OjfRSQTE_e12yGu2gnUUe69GcPh2e7kv_hxaxxs6yRc";
       let newToken = retrieveToken(token)
       //const newToken = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNTc0OTQ3NzkxLCJqdGkiOiIwNWM4MjhjZTUzMjY0YmRhYjY5YWIxYjJmNmNmZDMxMiIsInVzZXJfaWQiOjJ9.dtFi9MB71ug3OvUb04NTA6GFQPnjVuRSkSFovsqNLSU";
       console.log(newToken);
-      let endpoint = "ws://127.0.0.1:8000/kurye/"
+      let endpoint = `${WS_BASE_URL}kurye`
+      //let endpoint = "ws://127.0.0.1:8000/kurye/"
       // Create new WebSocket
       let ws = new WebSocket(endpoint + "?token=" + token)
 
