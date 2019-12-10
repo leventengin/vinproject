@@ -31,7 +31,8 @@ KULLANICI_TIPI = (
 
 BILDIRIM_TIPI = (
 ("0", 'Sipariş var'),    
-("1", 'SOS'),
+("1", 'Motorcu teslimatı kabul etmedi'),
+("2", 'SOS'),
 )
 
 
@@ -165,7 +166,9 @@ class IslemTeslimat(models.Model):
 
 class Bildirim(models.Model):
     tipi = models.CharField(max_length=2, default="0")
-    user =  models.ForeignKey(User, related_name='bildirim', on_delete=models.PROTECT)
+    receiver =  models.ForeignKey(User, related_name='receiver', on_delete=models.PROTECT)
+    sender = models.ForeignKey(User, related_name='sender', on_delete=models.PROTECT)
+    message = models.TextField(blank=True, null=True)
     viewed = models.BooleanField(default=False)
     timestamp = models.DateTimeField(auto_now=True)
     def __str__(self):

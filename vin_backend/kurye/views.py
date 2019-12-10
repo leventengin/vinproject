@@ -242,7 +242,22 @@ def courier_get_self_data(request):
                          }},
                          status=HTTP_400_BAD_REQUEST)
 
- 
+    rest_id = user.aktif_firma
+    rest_obj = Firma.objects.filter(id=rest_id).first()
+
+    if rest_obj:
+        rest_name = rest_obj.firma_adi
+        tel_no = rest_obj.tel_no
+        kayitlilar = rest_obj.kayitli_motorcular
+        if user.id in kayitlilar:
+            kayitli = True
+        else:
+            kayitli = False
+    else:
+        rest_name = ""
+        tel_no = ""
+        kayitli = False    
+
     print("here is pic_profile:", user.pic_profile)
     if user.pic_profile:
         pic_profile = BASE_URL + user.pic_profile.url
@@ -255,7 +270,11 @@ def courier_get_self_data(request):
                                          'pic_profile': pic_profile,
                                          'first_name': user.first_name,
                                          'last_name': user.last_name,
-                                         'durum': user.durum}
+                                         'durum': user.durum},
+                            'restaurant': { 'id': rest_id,
+                                            'restaurant_name': rest_name,
+                                            'tel_no': tel_no,
+                                            'kayitli': kayitli},                                         
                     }},
                     status=HTTP_200_OK)
 
@@ -1199,6 +1218,143 @@ def delivery_process(request):
                      'response' : {
                         'courier_state': user.durum,
                         'package_count': tesl_obj.adet,
+                     }},
+                    status=HTTP_200_OK)
+
+
+
+@csrf_exempt
+@api_view(["POST"])
+@permission_classes([permissions.IsAuthenticated,])
+def quit_queue(request):
+    print("-------------quit queue---------------")
+
+    user = request.user
+    if user.is_active is False:
+        return Response({'success': False,
+                         'message': 'Kulanıcı aktif değil',
+                         'response' : {
+                         }},
+                         status=HTTP_400_BAD_REQUEST)
+
+    if user.aktif is False:
+        return Response({'success': False,
+                         'message': 'Kullanıcı silinmiş',
+                         'response' : {
+                         }},
+                         status=HTTP_400_BAD_REQUEST)
+
+
+    # sadece sırada ise sıradan çıkmaya izin ver
+    
+    if user.durum == "1":
+        print("sırada")
+        user.durum = "4"
+        user.save()
+    else:
+        return Response({'success': False,
+                         'message': 'Kurye sırada değil!',
+                         'response' : {
+                         }},
+                         status=HTTP_400_BAD_REQUEST)
+    
+
+
+    return Response({'success': True,
+                     'message': 'Başarılı',
+                     'response' : {
+                        'courier_state': user.durum,
+                     }},
+                    status=HTTP_200_OK)
+
+
+
+@csrf_exempt
+@api_view(["POST"])
+@permission_classes([permissions.IsAuthenticated,])
+def enter_queue(request):
+    print("-------------enter queue---------------")
+
+    user = request.user
+    if user.is_active is False:
+        return Response({'success': False,
+                         'message': 'Kulanıcı aktif değil',
+                         'response' : {
+                         }},
+                         status=HTTP_400_BAD_REQUEST)
+
+    if user.aktif is False:
+        return Response({'success': False,
+                         'message': 'Kullanıcı silinmiş',
+                         'response' : {
+                         }},
+                         status=HTTP_400_BAD_REQUEST)
+
+
+    # sadece sırada ise sıradan çıkmaya izin ver
+    
+    if user.durum == "4":
+        print("sıradan çıkmış")
+        user.durum = "1"
+        user.save()
+    else:
+        return Response({'success': False,
+                         'message': 'Kurye sıradan çıkmış değil!',
+                         'response' : {
+                         }},
+                         status=HTTP_400_BAD_REQUEST)
+    
+
+
+    return Response({'success': True,
+                     'message': 'Başarılı',
+                     'response' : {
+                        'courier_state': user.durum,
+                     }},
+                    status=HTTP_200_OK)
+
+
+@csrf_exempt
+@api_view(["POST"])
+@permission_classes([permissions.IsAuthenticated,])
+def end_of_work(request):
+    print("-------------end of work---------------")
+
+    user = request.user
+    if user.is_active is False:
+        return Response({'success': False,
+                         'message': 'Kulanıcı aktif değil',
+                         'response' : {
+                         }},
+                         status=HTTP_400_BAD_REQUEST)
+
+    if user.aktif is False:
+        return Response({'success': False,
+                         'message': 'Kullanıcı silinmiş',
+                         'response' : {
+                         }},
+                         status=HTTP_400_BAD_REQUEST)
+
+
+    # sadece sırada ise sıradan çıkmaya izin ver
+    
+    if user.durum != "2":
+        print("iş bitiş")
+        user.durum = "0"
+        user.save()
+    else:
+        return Response({'success': False,
+                         'message': 'Servisteyken iş sonlandırılamaz!',
+                         'response' : {
+                         }},
+                         status=HTTP_400_BAD_REQUEST)
+    
+
+
+    return Response({'success': True,
+                     'message': 'Başarılı',
+                     'response' : {
+                        'courier_state': user.durum,
                      }},
                     status=HTTP_200_OK)
 

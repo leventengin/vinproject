@@ -44,9 +44,9 @@ def get_rest_list(latitude, longitude, user_id):
         distance = calculate_distance(latitude, longitude, rest_inst.enlem, rest_inst.boylam)
         #motorcu o restorana kayıtlı mı bak
         kayitlilar = rest_inst.kayitli_motorcular
-        kayitli = "false"
+        kayitli = False
         if rest_inst.id in kayitlilar:
-            kayitli = "true"
+            kayitli = True
         arr_item = {"id": rest_inst.id, 
                     "restorant_name": rest_inst.firma.firma_adi, 
                     "tel_no": rest_obj.firma.tel_no,
