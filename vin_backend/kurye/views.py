@@ -372,7 +372,7 @@ def start_working(request):
     return Response({'success': True,
                      'message': 'Başarılı',
                      'response' : {
-                        'restorant_list': rest_list
+                        'restaurant_list': rest_list
                      }},
                     status=HTTP_200_OK)
 
