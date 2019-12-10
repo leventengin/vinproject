@@ -2,7 +2,7 @@ from django.conf import settings
 from .models import User, Firma
 from django.contrib.auth import get_user_model
 import math
-
+from decimal import Decimal
 
 
 def calculate_distance(latitude, longitude, rest_latitude, rest_longitude ):
@@ -11,12 +11,14 @@ def calculate_distance(latitude, longitude, rest_latitude, rest_longitude ):
     print("rest_longitude", rest_longitude)
     print("rest_latitude", rest_latitude)   
     # iki lokasyon arasındaki uzaklığı hesapla - HAVERSINE
+    new_latitude = Decimal(latitude)
+    new_longitude = Decimal(longitude)
 
     R = 6372800  # Earth radius in meters
     
-    phi1, phi2 = math.radians(latitude), math.radians(rest_latitude) 
-    dphi       = math.radians(rest_latitude - latitude)
-    dlambda    = math.radians(rest_longitude - longitude)
+    phi1, phi2 = math.radians(new_latitude), math.radians(rest_latitude) 
+    dphi       = math.radians(rest_latitude - new_latitude)
+    dlambda    = math.radians(rest_longitude - new_longitude)
     
     a = math.sin(dphi/2)**2 + \
         math.cos(phi1)*math.cos(phi2)*math.sin(dlambda/2)**2
@@ -37,7 +39,7 @@ def get_rest_list(latitude, longitude, user_id):
 
     User=get_user_model()
 
-    rest_obj = User.objects.filter(tipi="1")
+    rest_obj = Firma.objects.all()
     list_rest = []
 
     for rest_inst  in rest_obj: 
@@ -45,18 +47,18 @@ def get_rest_list(latitude, longitude, user_id):
         #motorcu o restorana kayıtlı mı bak
         kayitlilar = rest_inst.kayitli_motorcular
         kayitli = False
-        if rest_inst.id in kayitlilar:
+        if user_id in kayitlilar:
             kayitli = True
-        arr_item = {"id": rest_inst.id, 
-                    "restorant_name": rest_inst.firma.firma_adi, 
-                    "tel_no": rest_obj.firma.tel_no,
+        arr_item = {"id": rest_inst.user.id, 
+                    "restorant_name": rest_inst.firma_adi, 
+                    "tel_no": rest_inst.tel_no,
                     "distance": distance, 
                     "kayitli": kayitli }
         list_rest.append(arr_item)
     
     print("list_rest")
     print(list_rest)
-    list_rest.sort(key = lambda x: x.distance)
+    list_rest.sort(key = lambda x: x['distance'])
     print("------------")
     print(list_rest)
     return list_rest
