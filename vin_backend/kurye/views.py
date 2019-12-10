@@ -367,7 +367,7 @@ def start_working(request):
     # kayıtlı değilse kayıtlı değil bilgisi dönüyor
     # not: şu an için hepsini dönüyor, test döneminde bu şekilde 
     
-    rest_list = get_rest_list(latitude=latitude, longitide=longitude, user_id=user.id)
+    rest_list = get_rest_list(latitude=latitude, longitude=longitude, user_id=user.id)
 
     return Response({'success': True,
                      'message': 'Başarılı',
