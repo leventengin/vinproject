@@ -243,20 +243,16 @@ def courier_get_self_data(request):
                          status=HTTP_400_BAD_REQUEST)
 
     rest_id = user.aktif_firma
-    rest_obj = Firma.objects.filter(id=rest_id).first()
+    rest_obj = Firma.objects.filter(pk=rest_id).first()
 
     if rest_obj:
         rest_name = rest_obj.firma_adi
         tel_no = rest_obj.tel_no
-        kayitlilar = rest_obj.kayitli_motorcular
-        if user.id in kayitlilar:
-            kayitli = True
-        else:
-            kayitli = False
+        allow_self_delivery = rest_obj.allow_self_delivery
     else:
         rest_name = ""
         tel_no = ""
-        kayitli = False    
+        allow_self_delivery = False    
 
     print("here is pic_profile:", user.pic_profile)
     if user.pic_profile:
@@ -270,11 +266,11 @@ def courier_get_self_data(request):
                                          'pic_profile': pic_profile,
                                          'first_name': user.first_name,
                                          'last_name': user.last_name,
-                                         'durum': user.durum},
+                                         'state': user.durum},
                             'restaurant': { 'id': rest_id,
                                             'restaurant_name': rest_name,
                                             'tel_no': tel_no,
-                                            'kayitli': kayitli},                                         
+                                            'allow_self_delivery': allow_self_delivery},                                         
                     }},
                     status=HTTP_200_OK)
 
