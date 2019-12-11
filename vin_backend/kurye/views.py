@@ -277,7 +277,8 @@ def courier_get_self_data(request):
                                         'state': user.durum,
                                         'queue_order': user.sira,
                                         'device_platform': user.device_platform,
-                                        'device_id': user.device_id
+                                        'device_id': user.device_id,
+                                        'restaurants': user.kaydolunan_restoranlar
                                         },
                             'restaurant': { 
                                             'id': rest_id,
@@ -469,7 +470,8 @@ def select_restaurant(request):
                             'state': user.durum,
                             'queue_order': yeni_sira,
                             'device_platform': user.device_platform,
-                            'device_id': user.device_id
+                            'device_id': user.device_id,
+                            'restaurants': user.kaydolunan_restoranlar
                          }
                      }},
                      status=HTTP_200_OK)

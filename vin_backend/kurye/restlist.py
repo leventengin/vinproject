@@ -45,24 +45,23 @@ def get_rest_list(latitude, longitude, user_id):
     for rest_inst  in rest_obj: 
         distance = calculate_distance(latitude, longitude, rest_inst.enlem, rest_inst.boylam)
         #motorcu o restorana kayıtlı mı bak
-        kayitlilar = rest_inst.kayitli_motorcular
-        kayitli = False
-        if user_id in kayitlilar:
-            kayitli = True
+        print("---distance---")
+        print(distance)
+        #kayitlilar = rest_inst.kayitli_motorcular
+        #kayitli = False
+        #if user_id in kayitlilar:
+        #    kayitli = True
         arr_item = {"id": rest_inst.user.id, 
                     "restaurant_name": rest_inst.firma_adi, 
                     "tel_no": rest_inst.tel_no,
                     "allow_self_delivery": rest_inst.allow_self_delivery,
                     "latitude": rest_inst.enlem,
                     "longitude": rest_inst.boylam,
-                    "distance": distance, 
-                    "kayitli": kayitli }
+                    "distance": distance 
+                    }
         list_rest.append(arr_item)
-    
-    print("list_rest")
-    print(list_rest)
+        
     list_rest.sort(key = lambda x: x['distance'])
-    print("------------")
     print(list_rest)
     return list_rest
 
