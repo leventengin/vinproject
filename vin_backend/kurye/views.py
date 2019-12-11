@@ -433,9 +433,9 @@ def select_restaurant(request):
     firma_adi = rest_obj.firma_adi
     tel_no = rest_obj.tel_no
     if rest_obj.allow_self_delivery:
-        allow_self_delivery = "true"
+        allow_self_delivery = True
     else:
-        allow_self_delivery = "false"
+        allow_self_delivery = False
 
     yeni_sira = siraya_gir(rest_obj.user.id)
     user.sira = yeni_sira
