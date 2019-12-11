@@ -29,7 +29,7 @@ urlpatterns = [
     url(r'courier_get_self_data', views.courier_get_self_data),
     #url(r'send_location', views.send_location),
     url(r'start_working', views.start_working),
-    url(r'select_restorant', views.select_restorant),
+    url(r'select_restaurant', views.select_restaurant),
     url(r'register_courier', views.register_courier),
     url(r'create_delivery', views.create_delivery),
     url(r'update_delivery', views.update_delivery),

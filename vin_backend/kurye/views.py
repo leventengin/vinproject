@@ -382,8 +382,8 @@ def start_working(request):
 @csrf_exempt
 @api_view(["POST"])
 @permission_classes([permissions.IsAuthenticated,])
-def select_restorant(request):
-    print("---------select restorant---------------")
+def select_restaurant(request):
+    print("---------select restaurant---------------")
     rest_id = request.data.get("rest_id")
     print(rest_id)
     if not rest_id:
@@ -410,8 +410,9 @@ def select_restorant(request):
                          }},
                          status=HTTP_400_BAD_REQUEST)
 
-    User=get_user_model() 
-    rest_obj =  User.objects.filter(id=rest_id).first()
+
+    rest_obj = Firma.objects.filter(user_id=rest_id).first()
+    print(rest_obj)
     firma_adi = rest_obj.firma_adi
     tel_no = rest_obj.tel_no
     if rest_obj.allow_self_delivery:
@@ -419,10 +420,10 @@ def select_restorant(request):
     else:
         allow_self_delivery = "false"
 
-    yeni_sira = siraya_gir(rest_obj.id)
-    user_obj.sira = yeni_sira
-    user_obj.aktif_firma = rest_obj.id
-    user_obj.save()
+    yeni_sira = siraya_gir(rest_obj.user.id)
+    user.sira = yeni_sira
+    user.aktif_firma = rest_obj.user.id
+    user.save()
 
 
     return Response({'success': True,
