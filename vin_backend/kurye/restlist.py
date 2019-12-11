@@ -74,13 +74,9 @@ def siraya_gir(firma_id):
     print("siraya_gir")
     print(firma_id)
     User=get_user_model()
-    motorcu_obj =  User.objects.filter(aktif_firma=firma_id).filter(durum="3").order_by('sira')
+    motorcu_obj =  User.objects.filter(aktif_firma=firma_id).filter(durum="1")
     print(motorcu_obj)
-    sira = 0
-    if motorcu_obj:
-        last_motorcu = motorcu_obj.last()
-        sira = int(last_motorcu.sira)
-    sira = sira+1
+    sira = motorcu_obj.count() + 1
     return sira
 
 

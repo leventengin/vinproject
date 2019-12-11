@@ -423,6 +423,7 @@ def select_restaurant(request):
     yeni_sira = siraya_gir(rest_obj.user.id)
     user.sira = yeni_sira
     user.aktif_firma = rest_obj.user.id
+    user.durum = "1"
     user.save()
 
 
@@ -433,12 +434,15 @@ def select_restaurant(request):
                             'restaurant_name': firma_adi,
                             'tel_no': tel_no,
                             'allow_self_delivery': allow_self_delivery,
+
+                         },
+                         'courier': {
+                            'state': user.durum,
                             'queue_order_courier': yeni_sira
                          }
                      }},
                      status=HTTP_200_OK)
     
-
 
 
 @csrf_exempt
