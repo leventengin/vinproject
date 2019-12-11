@@ -12,6 +12,7 @@ class UserSerializer(serializers.ModelSerializer):
         fields = '__all__'
         #fields = ('first_name', 'last_name', 'email', 'username', 'durum')
 
+
 class AnaFirmaSerializer(serializers.ModelSerializer):
     class Meta:
         model = AnaFirma
@@ -22,6 +23,8 @@ class FirmaSerializer(serializers.ModelSerializer):
     class Meta:
         model = Firma
         fields = '__all__'
+
+
 
 
 

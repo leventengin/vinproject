@@ -53,6 +53,8 @@ def get_rest_list(latitude, longitude, user_id):
                     "restaurant_name": rest_inst.firma_adi, 
                     "tel_no": rest_inst.tel_no,
                     "allow_self_delivery": rest_inst.allow_self_delivery,
+                    "latitude": rest_inst.enlem,
+                    "longitude": rest_inst.boylam,
                     "distance": distance, 
                     "kayitli": kayitli }
         list_rest.append(arr_item)

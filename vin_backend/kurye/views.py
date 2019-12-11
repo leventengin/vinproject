@@ -249,28 +249,44 @@ def courier_get_self_data(request):
         rest_name = rest_obj.firma_adi
         tel_no = rest_obj.tel_no
         allow_self_delivery = rest_obj.allow_self_delivery
+        latitude = rest_obj.enlem
+        longitude = rest_obj.boylam
     else:
         rest_name = ""
         tel_no = ""
-        allow_self_delivery = False    
+        allow_self_delivery = False
+        latitude = ""
+        longitude = ""    
 
     print("here is pic_profile:", user.pic_profile)
     if user.pic_profile:
         pic_profile = BASE_URL + user.pic_profile.url
     else:
         pic_profile = ""
+
     return Response({'success': True,
                     'message': 'Başarılı login',
                     'response':{
-                            'courier': { 'user_id': user.id,
-                                         'pic_profile': pic_profile,
-                                         'first_name': user.first_name,
-                                         'last_name': user.last_name,
-                                         'state': user.durum},
-                            'restaurant': { 'id': rest_id,
+                            'courier': { 
+                                        'id': user.id,
+                                        'first_name': user.first_name,
+                                        'last_name': user.last_name,   
+                                        'pic_profile': pic_profile,                   
+                                        'restaurant_id': user.aktif_firma,
+                                        'pin': user.pin,
+                                        'state': user.durum,
+                                        'queue_order': user.sira,
+                                        'device_platform': user.device_platform,
+                                        'device_id': user.device_id
+                                        },
+                            'restaurant': { 
+                                            'id': rest_id,
                                             'restaurant_name': rest_name,
                                             'tel_no': tel_no,
-                                            'allow_self_delivery': allow_self_delivery},                                         
+                                            'allow_self_delivery': allow_self_delivery,
+                                            'latitude': latitude,
+                                            'longitude': longitude
+                                        },                                         
                     }},
                     status=HTTP_200_OK)
 
@@ -426,19 +442,34 @@ def select_restaurant(request):
     user.durum = "1"
     user.save()
 
+    print("here is pic_profile:", user.pic_profile)
+    if user.pic_profile:
+        pic_profile = BASE_URL + user.pic_profile.url
+    else:
+        pic_profile = ""
 
     return Response({'success': True,
                      'message': 'Başarılı',
                      'response' : {
                          'restaurant': {
+                            'id': rest_obj.user.id,
                             'restaurant_name': firma_adi,
                             'tel_no': tel_no,
                             'allow_self_delivery': allow_self_delivery,
-
+                            'latitude': rest_obj.enlem,
+                            'longitude': rest_obj.boylam
                          },
                          'courier': {
+                            'id': user.id,
+                            'first_name': user.first_name,
+                            'last_name': user.last_name,   
+                            'pic_profile': pic_profile,                   
+                            'restaurant_id': user.aktif_firma,
+                            'pin': user.pin,
                             'state': user.durum,
-                            'queue_order_courier': yeni_sira
+                            'queue_order': yeni_sira,
+                            'device_platform': user.device_platform,
+                            'device_id': user.device_id
                          }
                      }},
                      status=HTTP_200_OK)
@@ -526,7 +557,7 @@ def register_courier(request):
                         )
 
     user_obj = User.objects.last()
-    prit(user_obj.username)
+    print(user_obj.username)
 
     return Response({'success': 'true',
                     'message': 'Başarılı',
