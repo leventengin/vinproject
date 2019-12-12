@@ -86,6 +86,8 @@ class User(AbstractUser):
     tipi = models.CharField(max_length=2, default="0")
     durum = models.CharField(max_length=2, default="0")
     aktif_firma = models.IntegerField(default=0)
+    aktif_teslimat = models.IntegerField(default=0)
+    aktif_islem = models.IntegerField(default=0)
     sira = models.IntegerField(default=0)
     enlem = models.DecimalField(max_digits=16, decimal_places=12, default="0.0")
     boylam = models.DecimalField(max_digits=16, decimal_places=12, default="0.0")
@@ -136,14 +138,14 @@ class Firma(models.Model):
 
 
 class Teslimat(models.Model):
-    kurye = models.ForeignKey(User, related_name='teslimat', blank=True, null=True, on_delete=models.PROTECT)
+    kurye = models.ForeignKey(User, related_name='teslimat',  on_delete=models.PROTECT)
     firma = models.ForeignKey(Firma, related_name='teslimat_firma', on_delete=models.PROTECT)
     onay = models.BooleanField(default=True)
     adet = models.PositiveIntegerField(default=0)
     gecerli_adet = models.PositiveIntegerField(default=0)
     zaman = models.DateTimeField(auto_now=True)
     def __str__(self):
-       return self.user
+       return self.kurye.username
 
 
 
@@ -151,7 +153,7 @@ class Teslimat(models.Model):
 class IslemTeslimat(models.Model):
     teslimat = models.ForeignKey(Teslimat, related_name='teslimat', on_delete=models.PROTECT)
     islem_tipi = models.CharField(max_length=2, default="0")
-    tel_no: models.CharField(max_length=10, default="")
+    tel_no = models.CharField(max_length=10, default="")
     address = models.CharField(max_length=200)
     teslim_edilmedi_sebep = models.CharField(max_length=2, default="0")
     odeme_alinmadi_sebep = models.CharField(max_length=2, default="0")
@@ -159,7 +161,7 @@ class IslemTeslimat(models.Model):
     sos_kaldir_sonuc = models.CharField(max_length=2, default="0")
     zaman = models.DateTimeField(auto_now=True)
     def __str__(self):
-       return self.user
+       return self.teslimat.kurye.username
 
 
 
@@ -172,7 +174,7 @@ class Bildirim(models.Model):
     viewed = models.BooleanField(default=False)
     timestamp = models.DateTimeField(auto_now=True)
     def __str__(self):
-        return '%s-%s' % (self.user, self.timestamp)
+        return '%s-%s' % (self.sender, self.timestamp)
 
 
 
@@ -204,7 +206,7 @@ class FaturaDetay(models.Model):
     standart_tutar = models.PositiveIntegerField(default=0) 
     ek_tutar = models.PositiveIntegerField(default=0) 
     def __str__(self):
-        return '%s-%s-%s' % (self.username, self.yil, self.ay)
+        return '%s-%s-%s' % (self.user, self.yil, self.ay)
 
 
 class FaturaToplam(models.Model):
@@ -214,7 +216,7 @@ class FaturaToplam(models.Model):
     odendi = models.BooleanField(blank=True) 
     tutar = models.PositiveIntegerField(default=0) 
     def __str__(self):
-        return '%s-%s-%s' % (self.username, self.yil, self.ay)
+        return '%s-%s-%s' % (self.user, self.yil, self.ay)
 
 
 

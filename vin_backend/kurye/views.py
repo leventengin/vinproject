@@ -1,7 +1,7 @@
 
 from rest_framework import viewsets
 from django.conf import settings
-from .models import User, AnaFirma, Firma, WSClient
+from .models import User, AnaFirma, Firma, WSClient, Teslimat, IslemTeslimat
 from .serializers import UserSerializer, AnaFirmaSerializer, FirmaSerializer
 from django.contrib.auth import get_user_model
 from django.middleware.csrf import get_token
@@ -258,6 +258,40 @@ def courier_get_self_data(request):
         latitude = ""
         longitude = ""    
 
+    tesl_id = user.aktif_teslimat
+    tesl_obj = Teslimat.objects.filter(pk=tesl_id).first()
+
+    if tesl_obj:
+        tesl_id = tesl_obj.id
+        courier_id = tesl_obj.kurye.id
+        restaurant_id = tesl_obj.firma.user.id
+        count = tesl_obj.adet
+        active_count = tesl_obj.gecerli_adet
+        islem_obj = IslemTeslimat.objects.filter(teslimat=tesl_id)
+        details = []
+        if islem_obj:
+            for islem in islem_obj:
+                isl_arr = {
+                    'id': islem.id,
+                    'delivery': islem.teslimat.id,
+                    'type': islem.islem_tipi,
+                    'tel_no': islem.tel_no,
+                    'address': islem.address,
+                    'non_delivery_reason': islem.teslim_edilmedi_sebep, 
+                    'non_payment_reason': islem.odeme_alinmadi_sebep, 
+                    'sos_reason': islem.sos_sebep, 
+                    'cancel_sos_result': islem.sos_kaldir_sonuc 
+                }
+                details.append(isl_arr)
+
+    else:
+        tesl_id = ""
+        courier_id = ""
+        restaurant_id = ""
+        count = ""
+        active_count = ""  
+        details = []
+
     print("here is pic_profile:", user.pic_profile)
     if user.pic_profile:
         pic_profile = BASE_URL + user.pic_profile.url
@@ -287,7 +321,15 @@ def courier_get_self_data(request):
                                             'allow_self_delivery': allow_self_delivery,
                                             'latitude': latitude,
                                             'longitude': longitude
-                                        },                                         
+                                        },  
+                            'delivery': {
+                                            'id': tesl_id,
+                                            'courier_id': courier_id,
+                                            'restaurant_id': restaurant_id,
+                                            'count': count,
+                                            'active_count': active_count,
+                                            'details': details
+                            }                                       
                     }},
                     status=HTTP_200_OK)
 
