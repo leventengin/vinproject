@@ -68,9 +68,9 @@ SOS_SEBEP = (
 ("4", 'Diğer'),
 )
 
-SOS_KALDIR = (
+SOS_SONUC = (
 ("0", 'Devam'),
-("1", 'Ger, dön')
+("1", 'Geri dön')
 )
 
 DEVICE_PLATFORM = (
@@ -143,6 +143,9 @@ class Teslimat(models.Model):
     onay = models.BooleanField(default=True)
     adet = models.PositiveIntegerField(default=0)
     gecerli_adet = models.PositiveIntegerField(default=0)
+    sos = models.BooleanField(default=False)
+    sos_sebep = models.CharField(max_length=2, default="0")
+    sos_sonuc = models.CharField(max_length=2, default="0")
     zaman = models.DateTimeField(auto_now=True)
     def __str__(self):
        return self.kurye.username
@@ -153,15 +156,18 @@ class Teslimat(models.Model):
 class IslemTeslimat(models.Model):
     teslimat = models.ForeignKey(Teslimat, related_name='teslimat', on_delete=models.PROTECT)
     islem_tipi = models.CharField(max_length=2, default="0")
+    tam_isim = models.CharField(max_length=60, default="")
     tel_no = models.CharField(max_length=10, default="")
     address = models.CharField(max_length=200)
+    enlem = models.DecimalField(max_digits=16, decimal_places=12, default="0.0")
+    boylam = models.DecimalField(max_digits=16, decimal_places=12, default="0.0")
     teslim_edilmedi_sebep = models.CharField(max_length=2, default="0")
     odeme_alinmadi_sebep = models.CharField(max_length=2, default="0")
     sos_sebep = models.CharField(max_length=2, default="0")
-    sos_kaldir_sonuc = models.CharField(max_length=2, default="0")
+    sos_sonuc = models.CharField(max_length=2, default="0")
     zaman = models.DateTimeField(auto_now=True)
     def __str__(self):
-       return self.teslimat.kurye.username
+        return self.teslimat.kurye.username
 
 
 

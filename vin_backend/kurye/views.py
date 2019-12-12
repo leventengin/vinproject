@@ -3,6 +3,7 @@ from rest_framework import viewsets
 from django.conf import settings
 from .models import User, AnaFirma, Firma, WSClient, Teslimat, IslemTeslimat
 from .serializers import UserSerializer, AnaFirmaSerializer, FirmaSerializer
+from .serializers import TeslimatSerializer, IslemTeslimatSerializer
 from django.contrib.auth import get_user_model
 from django.middleware.csrf import get_token
 from rest_framework.authtoken.models import Token
@@ -60,11 +61,20 @@ class AnaFirmaViewSet(viewsets.ModelViewSet):
     serializer_class = AnaFirmaSerializer
     queryset = AnaFirma.objects.all()
 
+
 class FirmaViewSet(viewsets.ModelViewSet):
     serializer_class = FirmaSerializer
     queryset = Firma.objects.all()
 
 
+class TeslimatViewSet(viewsets.ModelViewSet):
+    serializer_class = TeslimatSerializer
+    queryset = Teslimat.objects.all()
+
+
+class IslemTeslimatViewSet(viewsets.ModelViewSet):
+    serializer_class = IslemTeslimatSerializer
+    queryset = IslemTeslimat.objects.all()
 
 
 
@@ -267,6 +277,9 @@ def courier_get_self_data(request):
         restaurant_id = tesl_obj.firma.user.id
         count = tesl_obj.adet
         active_count = tesl_obj.gecerli_adet
+        sos = tesl_obj.sos
+        sos_reason = tesl_obj.sos_sebep
+        sos_result = tesl_obj.sos_sonuc
         islem_obj = IslemTeslimat.objects.filter(teslimat=tesl_id)
         details = []
         if islem_obj:
@@ -275,12 +288,15 @@ def courier_get_self_data(request):
                     'id': islem.id,
                     'delivery': islem.teslimat.id,
                     'type': islem.islem_tipi,
+                    'name': islem.tam_isim,
                     'tel_no': islem.tel_no,
                     'address': islem.address,
+                    'latitude': islem.enlem,
+                    'longitude': islem.boylam,
                     'non_delivery_reason': islem.teslim_edilmedi_sebep, 
-                    'non_payment_reason': islem.odeme_alinmadi_sebep, 
-                    'sos_reason': islem.sos_sebep, 
-                    'cancel_sos_result': islem.sos_kaldir_sonuc 
+                    'non_payment_reason': islem.odeme_alinmadi_sebep 
+                    #'sos_reason': islem.sos_sebep, 
+                    #'cancel_sos_result': islem.sos_kaldir_sonuc 
                 }
                 details.append(isl_arr)
 
@@ -290,6 +306,9 @@ def courier_get_self_data(request):
         restaurant_id = ""
         count = ""
         active_count = ""  
+        sos = False
+        sos_reason = ""
+        sos_result = ""
         details = []
 
     print("here is pic_profile:", user.pic_profile)
@@ -328,7 +347,10 @@ def courier_get_self_data(request):
                                             'restaurant_id': restaurant_id,
                                             'count': count,
                                             'active_count': active_count,
-                                            'details': details
+                                            'sos': sos,
+                                            'sos_reason': sos_reason,
+                                            'sos_result': sos_result,
+                                            'orders': details
                             }                                       
                     }},
                     status=HTTP_200_OK)
@@ -518,6 +540,113 @@ def select_restaurant(request):
                      }},
                      status=HTTP_200_OK)
     
+
+
+
+
+@csrf_exempt
+@api_view(["POST"])
+@permission_classes([permissions.IsAuthenticated,])
+def get_delivery(request):
+    print("---------get delivery--------------")
+    delivery_id = request.data.get("delivery_id")
+    print(delivery_id)
+    if not delivery_id:
+        return Response({'success': False,
+                         'message': 'Eksik bilgi gönderildi',
+                         'response' : {
+                         }},
+                         status=HTTP_400_BAD_REQUEST)
+
+
+    user = request.user
+
+    if user.is_active is False:
+        return Response({'success': False,
+                         'message': 'Kullanıcı aktif değil',
+                         'response' : {
+                         }},
+                         status=HTTP_400_BAD_REQUEST)
+
+    if user.aktif is False:
+        return Response({'success': False,
+                         'message': 'Kullanıcı silinmiş',
+                         'response' : {
+                         }},
+                         status=HTTP_400_BAD_REQUEST)
+
+
+    tesl_obj = Teslimat.objects.filter(pk=delivery_id).first()
+    if not tesl_obj:
+        return Response({'success': False,
+                         'message': 'Teslimat yok',
+                         'response' : {
+                         }},
+                         status=HTTP_400_BAD_REQUEST)
+
+
+    if tesl_obj:
+        tesl_id = tesl_obj.id
+        courier_id = tesl_obj.kurye.id
+        restaurant_id = tesl_obj.firma.user.id
+        count = tesl_obj.adet
+        active_count = tesl_obj.gecerli_adet
+        sos = tesl_obj.sos
+        sos_sebep = tesl_obj.sos_sebep
+        sos_sonuc = tesl_obj.sos_sonuc
+        islem_obj = IslemTeslimat.objects.filter(teslimat=tesl_id)
+        details = []
+        if islem_obj:
+            for islem in islem_obj:
+                isl_arr = {
+                    'id': islem.id,
+                    'delivery': islem.teslimat.id,
+                    'type': islem.islem_tipi,
+                    'name': islem.tam_isim,
+                    'tel_no': islem.tel_no,
+                    'address': islem.address,
+                    'latitude': islem.enlem,
+                    'longitude': islem.boylam,
+                    'non_delivery_reason': islem.teslim_edilmedi_sebep, 
+                    'non_payment_reason': islem.odeme_alinmadi_sebep 
+                    #'sos_reason': islem.sos_sebep, 
+                    #'cancel_sos_result': islem.sos_kaldir_sonuc 
+                }
+                details.append(isl_arr)
+
+    else:
+        tesl_id = ""
+        courier_id = ""
+        restaurant_id = ""
+        count = ""
+        active_count = ""  
+        details = []
+        sos = False
+        sos_sebep = ""
+        sos_sonuc = ""
+
+
+    return Response({'success': True,
+                    'message': 'Başarılı login',
+                    'response':{
+                            'delivery': {
+                                            'id': tesl_id,
+                                            'courier_id': courier_id,
+                                            'restaurant_id': restaurant_id,
+                                            'count': count,
+                                            'active_count': active_count,
+                                            'sos': sos,
+                                            'sos_reason': sos_sebep,
+                                            'sos_result': sos_sonuc,
+                                            'orders': details
+                                        }                                       
+                    }},
+                    status=HTTP_200_OK)
+    
+
+
+
+
 
 
 @csrf_exempt

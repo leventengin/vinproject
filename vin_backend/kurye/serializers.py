@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import User, AnaFirma, Firma
+from .models import User, AnaFirma, Firma, Teslimat, IslemTeslimat
 from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
 
@@ -24,6 +24,18 @@ class FirmaSerializer(serializers.ModelSerializer):
         model = Firma
         fields = '__all__'
 
+
+class IslemTeslimatSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = IslemTeslimat
+        fields = '__all__'
+
+
+class TeslimatSerializer(serializers.ModelSerializer):
+    islemteslimats = IslemTeslimatSerializer(many=True, read_only=True)
+    class Meta:
+        model = Teslimat
+        fields = ['kurye', 'firma', 'onay', 'adet', 'gecerli_adet', 'islemteslimats']
 
 
 

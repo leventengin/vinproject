@@ -1,4 +1,4 @@
-from .views import UserViewSet, AnaFirmaViewSet, FirmaViewSet
+from .views import UserViewSet, AnaFirmaViewSet, FirmaViewSet, TeslimatViewSet, IslemTeslimatViewSet
 from rest_framework.routers import DefaultRouter
 from django.conf import settings
 from django.conf.urls.static import static
@@ -23,13 +23,15 @@ router = DefaultRouter()
 router.register(r'user', UserViewSet, base_name='user')
 router.register(r'anafirma', AnaFirmaViewSet, base_name='anafirma')
 router.register(r'firma', FirmaViewSet, base_name='firma')
-
+router.register(r'teslimat', TeslimatViewSet, base_name='teslimat')
+router.register(r'islemteslimat', IslemTeslimatViewSet, base_name='islemteslimat')
 
 urlpatterns = [
     url(r'courier_get_self_data', views.courier_get_self_data),
     #url(r'send_location', views.send_location),
     url(r'start_working', views.start_working),
     url(r'select_restaurant', views.select_restaurant),
+    url(r'get_delivery', views.get_delivery),  
     url(r'register_courier', views.register_courier),
     url(r'create_delivery', views.create_delivery),
     url(r'update_delivery', views.update_delivery),
