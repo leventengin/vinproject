@@ -5,6 +5,9 @@ from django.db.models.signals import post_save, pre_save
 from django.dispatch import receiver
 from django.db.models import Q
 from django.contrib.postgres.fields import ArrayField, JSONField
+import requests
+from django.contrib.auth import get_user_model
+from push_notifications.models import APNSDevice, GCMDevice
 
 
 
@@ -96,7 +99,7 @@ class User(AbstractUser):
     pin = models.CharField(max_length=6, default="")
     kaydolunan_restoranlar = ArrayField(models.IntegerField(), blank=True, null=True)
     device_platform = models.CharField(max_length=1, choices=DEVICE_PLATFORM, default="0")
-    device_id = models.CharField(max_length=40, default="0")
+    device_id = models.CharField(max_length=100, default="0")
     pic_profile = models.ImageField(upload_to='pic_profile/%Y/%m/%d/',blank=True, null=True,)
     def __str__(self):
        return '%s-%s' % (self.first_name, self.last_name)
@@ -140,7 +143,7 @@ class Firma(models.Model):
 class Teslimat(models.Model):
     kurye = models.ForeignKey(User, related_name='teslimat',  on_delete=models.PROTECT)
     firma = models.ForeignKey(Firma, related_name='teslimat_firma', on_delete=models.PROTECT)
-    onay = models.BooleanField(default=True)
+    onay = models.BooleanField(default=False)
     adet = models.PositiveIntegerField(default=0)
     gecerli_adet = models.PositiveIntegerField(default=0)
     sos = models.BooleanField(default=False)
@@ -149,6 +152,63 @@ class Teslimat(models.Model):
     zaman = models.DateTimeField(auto_now=True)
     def __str__(self):
        return self.kurye.username
+
+
+"""
+@receiver(post_save, sender=Teslimat)
+def delivery_create_update(sender, instance, **kwargs):
+    User=get_user_model()
+    user = User.objects.get(pk=instance.kurye.id)
+    print("delivery_create_update")
+    print(user)
+    print(user.device_id)
+    device, created = APNSDevice.objects.get_or_create(
+                                registration_id=user.device_id
+                                #defaults={'user': user}
+                                )
+    print("after created")
+    
+    msg={"title" : "Game Request", "body" : "Bob wants to play poker"}
+    extra={"delivery_id": instance.id}
+    print(msg)
+    device.send_message(message=msg, sound="default", category="ID_CATEGORY_DELIVERY", extra=extra)
+"""
+
+
+@receiver(pre_save, sender=Teslimat)
+def delivery_create_update(sender, instance, **kwargs):
+    User=get_user_model()
+    user_id = instance.kurye.id
+    print(user_id)
+    user = User.objects.get(pk=user_id)
+    print("delivery_create_update")
+    print(user.device_id)
+    try:
+        status_old = sender.objects.get(pk=instance.pk)
+        # send push notification fot updated delivery if courier changes
+        if not (instance.kurye == status_old.kurye): 
+            device, created = APNSDevice.objects.get_or_create(
+                                        registration_id=user.device_id,
+                                        defaults={'user': user}
+                                        )
+            print("sender -teslimat - exists")
+            msg={"title" : "Update", "body" : "Bob updates delivery details"}
+            extra={"delivery_id": instance.id}
+            print(msg)
+            device.send_message(message=msg, sound="default", category="ID_CATEGORY_DELIVERY", extra=extra)
+
+
+    except sender.DoesNotExist:
+        # send push-notif for new delivery
+        device, created = APNSDevice.objects.get_or_create(
+                                    registration_id=user.device_id,
+                                    defaults={'user': user}
+                                    )
+        print("sender - teslimat - doesnot exist")
+        msg={"title" : "New delivery", "body" : "Bob wants new delivery"}
+        extra={"delivery_id": instance.id}
+        print(msg)
+        device.send_message(message=msg, sound="default", category="ID_CATEGORY_DELIVERY", extra=extra)
 
 
 

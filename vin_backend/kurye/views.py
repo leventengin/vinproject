@@ -85,9 +85,6 @@ def pin_login(request):
     print("-------------pin login---------------")
     pin = request.data.get("pin").rstrip()
     
-    user_agent = get_user_agent(request)
-    print("user-agent")
-    print(user_agent)
 
     print(pin)
     if not pin:
@@ -648,6 +645,54 @@ def get_delivery(request):
 
 
 
+@csrf_exempt
+@api_view(["POST"])
+@permission_classes([permissions.IsAuthenticated,])
+def update_device(request):
+    print("---------update device--------------")
+    device_platform = request.data.get("device_platform")
+    device_id = request.data.get("device_id")
+    print(device_platform)
+    print(device_id)
+
+    if not device_id  or  not device_platform:
+        return Response({'success': False,
+                         'message': 'Eksik bilgi gönderildi',
+                         'response' : {
+                         }},
+                         status=HTTP_400_BAD_REQUEST)
+
+
+    user = request.user
+
+    if user.is_active is False:
+        return Response({'success': False,
+                         'message': 'Kullanıcı aktif değil',
+                         'response' : {
+                         }},
+                         status=HTTP_400_BAD_REQUEST)
+
+    if user.aktif is False:
+        return Response({'success': False,
+                         'message': 'Kullanıcı silinmiş',
+                         'response' : {
+                         }},
+                         status=HTTP_400_BAD_REQUEST)
+
+
+    user.device_platform = device_platform
+    user.device_id = device_id
+    user.save()
+
+    return Response({'success': True,
+                    'message': 'Başarıyla kaydedildi',
+                    'response':{                        
+                    }},
+                    status=HTTP_200_OK)
+    
+    
+
+
 
 @csrf_exempt
 @api_view(["POST"])
@@ -1052,10 +1097,12 @@ def create_delivery(request):
     address_list = request.data.get("address_list")
     count = request.data.get("count")
     courier_id = request.data.get("courier_id")
+    restaurant_id = request.data.get("restaurant_id")
     print(address_list)
     print(count)
     print(courier_id)
-    if not address_list or not count  or not courier_id:
+    print(restaurant_id)
+    if not address_list or not count  or not courier_id or not restaurant_id:
         return Response({'success': False,
                          'message': 'Eksik bilgi gönderildi',
                          'response' : {
@@ -1080,22 +1127,29 @@ def create_delivery(request):
 
 
     # not: restorandan gelen bilgilere göre yeni bir teslimat ve ilişkili işlemler yarat 
-    
-    tesl_obj = Teslimat.objects.create( firma=user,
+    print("teslimat yaratma öncesi")
+    tesl_obj = Teslimat.objects.create( firma_id=restaurant_id,
                                         kurye_id=courier_id,
                                         adet=count,
                                         gecerli_adet=count
                                         )
-
-    for address in address_list:
+    print( "islem teslimat yaratma öncesi")
+    print(address_list[0])
+    print(address_list[0]["name"])
+    i = 0
+    x = len(address_list)
+    print("len", x)
+    while i < x:
         islem_obj = IslemTeslimat.objects.create(teslimat=tesl_obj,
-                                                tel_no=address.tel_no,
-                                                address=address.address
+                                                tam_isim=address_list[i]["name"],
+                                                tel_no=address_list[i]["tel_no"],
+                                                address=address_list[i]["address"]
                                                 )
-
+        i = i + 1
+    
 
     #
-    # sonrasında Push Notification gönder.....
+    #  Push Notification gönderiyor models - signals ile
     #
 
 
@@ -1118,11 +1172,13 @@ def update_delivery(request):
     address_list = request.data.get("address_list")
     count = request.data.get("count")
     courier_id = request.data.get("courier_id")
+    restaurant_id = request.data.get("restaurant_id")
     print(delivery_id)
     print(address_list)
     print(count)
     print(courier_id)
-    if not delivery_id or not address_list or not count  or not courier_id:
+    print(restaurant_id)
+    if not delivery_id or not address_list or not count  or not courier_id or not restaurant_id:
         return Response({'success': False,
                          'message': 'Eksik bilgi gönderildi',
                          'response' : {
@@ -1157,27 +1213,30 @@ def update_delivery(request):
                          status=HTTP_400_BAD_REQUEST)
 
 
-    tesl_obj = Teslimat.objects.save(id=delivery_id,
-                                        firma=user,
-                                        kurye_id=courier_id,
-                                        adet=count,
-                                        gecerli_adet=count
-                                        )
+    tesl_obj.firma_id = restaurant_id
+    tesl_obj.kurye_id = courier_id
+    tesl_obj.adet = count
+    tesl_obj.gecerli_adet = count
+    tesl_obj.save()
 
     islem_obj = IslemTeslimat.objects.filter(teslimat=tesl_obj)
     if islem_obj:
         for islem in islem_obj:
             islem.delete()
 
-    for address in address_list:
+    i = 0
+    x = len(address_list)
+    print("len", x)
+    while i < x:
         islem_obj = IslemTeslimat.objects.create(teslimat=tesl_obj,
-                                                tel_no=address.tel_no,
-                                                address=address.address
+                                                tam_isim=address_list[i]["name"],
+                                                tel_no=address_list[i]["tel_no"],
+                                                address=address_list[i]["address"]
                                                 )
-
+        i = i + 1
 
     #
-    # sonrasında Push Notification gönder.....
+    # Push Notification gönderiyor models - signals ile
     #
 
 
@@ -1242,22 +1301,20 @@ def delivery_approve_reject(request):
                          }},
                          status=HTTP_400_BAD_REQUEST)
 
-    address_list = {}
-    address_item = {}
+    if state == 0:
+        pass
+        #  send notification to restaurant that delivery declined
+        #  new order must be send
 
-    for islem in islem_obj:
-        address_item = {"process_id": islem.id, 
-                        "address": islem.address, 
-                        "tel_no": islem.tel_no,}
-        address_list.append(address_item)
+    else: 
+        tesl_obj.onay = True
+        tesl_obj.save()
 
-    print(address_list)
+    
 
     return Response({'success': True,
                      'message': 'Başarılı',
                      'response' : {
-                        'address_list': address_list,
-                        'count': tesl_obj.adet,
                      }},
                     status=HTTP_200_OK)
 
@@ -1269,26 +1326,17 @@ def delivery_approve_reject(request):
 def delivery_process(request):
     print("-------------update delivery---------------")
     delivery_id = request.data.get("delivery_id")
-    process_id = request.data.get("process_id")
-    process_id_next = request.data.get("process_id_next")    
-    restaurant_id = request.data.get("restaurant_id")
     process_type = request.data.get("process_type")
     nondelivery_reason = request.data.get("nondelivery_reason")
     nonpayment_reason = request.data.get("nonpayment_reason")
-    sos_reason = request.data.get("sos_reason")
-    soscancel_result = request.data.get("soscancel_result")
     print(delivery_id)
-    print(process_id)
-    print(process_id_next)
-    print(restaurant_id)
     print(process_type)
     print(nondelivery_reason)
     print(nonpayment_reason)
-    print(sos_reason)
-    print(soscancel_result)
 
 
-    if not delivery_id or not process_id or not restaurant_id or not process_type:
+
+    if not delivery_id or not process_type:
         return Response({'success': False,
                          'message': 'Eksik bilgi gönderildi',
                          'response' : {
@@ -1341,9 +1389,9 @@ def delivery_process(request):
         print("case-1")
         islem_obj.islem_tipi = process_type
         islem_obj.save()
-        count = tesl_obj.adet
+        count = tesl_obj.gecerli_adet
         count = count -1
-        tesl_obj.adet = count
+        tesl_obj.gecerli_adet = count
         tesl_obj.save()
         if count > 1: 
             # burada bir sonraki sıradaki kişiye SMS at
@@ -1357,9 +1405,9 @@ def delivery_process(request):
         islem_obj.islem_tipi = process_type
         islem_obj.odeme_alinmadi_sebep = nonpayment_reason
         islem_obj.save()
-        count = tesl_obj.adet
+        count = tesl_obj.gecerli_adet
         count = count -1
-        tesl_obj.adet = count
+        tesl_obj.gecerli_adet = count
         tesl_obj.save()
         if count > 1: 
             # burada bir sonraki sıradaki kişiye SMS at
@@ -1387,28 +1435,7 @@ def delivery_process(request):
 
 
 
-    elif process_type == "4":
-        print("case-4")
-        islem_obj.islem_tipi = process_type
-        islem_obj.sos_sebep = sos_reason
-        islem_obj.save()
-        user.durum = "4"
-        user.save()
-        #
-        # burada çalışılan restorana bildirim at
-        #
-
-    elif process_type == "5":
-        print("case-4")
-        islem_obj.islem_tipi = process_type
-        islem_obj.sos_kaldir_sonuc = soscancel_result
-        islem_obj.save()
-        user.durum = "5"
-        user.save()
-        #
-        # burada çalışılan restorana bildirim at
-        #
-
+    
     else:
         return Response({'success': False,
                          'message': 'İşlem tipi yanlış, kayıt dışı',
@@ -1422,7 +1449,7 @@ def delivery_process(request):
                      'message': 'Başarılı',
                      'response' : {
                         'courier_state': user.durum,
-                        'package_count': tesl_obj.adet,
+                        'package_count': tesl_obj.gecerli_adet,
                      }},
                     status=HTTP_200_OK)
 

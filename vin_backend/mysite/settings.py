@@ -257,9 +257,14 @@ SIMPLE_JWT = {
 
 
 PUSH_NOTIFICATIONS_SETTINGS = {
-    "FCM_API_KEY": "[your api key]",
-    "APNS_CERTIFICATE": "/path/to/your/certificate.pem",
+    #"FCM_API_KEY": "[your api key]",
+    "APNS_CERTIFICATE": "/home/leventengin/pem/aps.pem",
+    #"APNS_TOPIC": "com.vinkurye.VINKuryeiOS",
+    "APNS_USE_ALTERNATIVE_PORT": 2197,
+    "APNS_USE_SANDBOX": True
 }
+
+
 
 
 

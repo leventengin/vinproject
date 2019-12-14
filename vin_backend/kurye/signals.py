@@ -9,6 +9,8 @@ from channels.db import database_sync_to_async
 from asgiref.sync import async_to_sync
 from .consumers import location_response 
 from django.contrib.auth import get_user_model
+from .models import Teslimat
+from push_notifications.models import APNSDevice, GCMDevice
 
 
 
@@ -26,6 +28,8 @@ def status_change(sender, instance, **kwargs):
                         "queue_order": user.sira
                         }
             async_to_sync(location_response(order_obj))
+
+
 
 
 
