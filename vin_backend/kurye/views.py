@@ -253,30 +253,22 @@ def courier_get_self_data(request):
     rest_obj = Firma.objects.filter(pk=rest_id).first()
 
     if rest_obj:
-        rest_name = rest_obj.firma_adi
-        tel_no = rest_obj.tel_no
-        allow_self_delivery = rest_obj.allow_self_delivery
-        latitude = rest_obj.enlem
-        longitude = rest_obj.boylam
+        restaurant = {
+                        'id': rest_id,
+                        'restaurant_name': rest_obj.firma_adi,
+                        'tel_no': rest_obj.tel_no,
+                        'allow_self_delivery': rest_obj.allow_self_delivery,
+                        'latitude': rest_obj.enlem,
+                        'longitude': rest_obj.boylam
+                    }
     else:
-        rest_name = ""
-        tel_no = ""
-        allow_self_delivery = False
-        latitude = ""
-        longitude = ""    
+        restaurant = {}
 
     tesl_id = user.aktif_teslimat
     tesl_obj = Teslimat.objects.filter(pk=tesl_id).first()
 
     if tesl_obj:
         tesl_id = tesl_obj.id
-        courier_id = tesl_obj.kurye.id
-        restaurant_id = tesl_obj.firma.user.id
-        count = tesl_obj.adet
-        active_count = tesl_obj.gecerli_adet
-        sos = tesl_obj.sos
-        sos_reason = tesl_obj.sos_sebep
-        sos_result = tesl_obj.sos_sonuc
         islem_obj = IslemTeslimat.objects.filter(teslimat=tesl_id)
         details = []
         if islem_obj:
@@ -292,21 +284,25 @@ def courier_get_self_data(request):
                     'longitude': islem.boylam,
                     'non_delivery_reason': islem.teslim_edilmedi_sebep, 
                     'non_payment_reason': islem.odeme_alinmadi_sebep 
-                    #'sos_reason': islem.sos_sebep, 
-                    #'cancel_sos_result': islem.sos_kaldir_sonuc 
                 }
                 details.append(isl_arr)
+        
+        teslimat = {
+                    'id': tesl_obj.id,
+                    'courier_id': tesl_obj.kurye.id,
+                    'restaurant_id': tesl_obj.firma.user.id,
+                    'count': tesl_obj.adet,
+                    'active_count': tesl_obj.gecerli_adet,
+                    'sos': tesl_obj.sos,
+                    'sos_reason': tesl_obj.sos_sebep,
+                    'sos_result': tesl_obj.sos_sonuc,
+                    'orders': details
+        }
+
+
 
     else:
-        tesl_id = ""
-        courier_id = ""
-        restaurant_id = ""
-        count = ""
-        active_count = ""  
-        sos = False
-        sos_reason = ""
-        sos_result = ""
-        details = []
+        teslimat = {}
 
     print("here is pic_profile:", user.pic_profile)
     if user.pic_profile:
@@ -330,25 +326,8 @@ def courier_get_self_data(request):
                                         'device_id': user.device_id,
                                         'restaurants': user.kaydolunan_restoranlar
                                         },
-                            'restaurant': { 
-                                            'id': rest_id,
-                                            'restaurant_name': rest_name,
-                                            'tel_no': tel_no,
-                                            'allow_self_delivery': allow_self_delivery,
-                                            'latitude': latitude,
-                                            'longitude': longitude
-                                        },  
-                            'delivery': {
-                                            'id': tesl_id,
-                                            'courier_id': courier_id,
-                                            'restaurant_id': restaurant_id,
-                                            'count': count,
-                                            'active_count': active_count,
-                                            'sos': sos,
-                                            'sos_reason': sos_reason,
-                                            'sos_result': sos_result,
-                                            'orders': details
-                            }                                       
+                            'restaurant': restaurant,
+                            'delivery': teslimat,                       
                     }},
                     status=HTTP_200_OK)
 
