@@ -206,7 +206,7 @@ def delivery_create_update(sender, instance, **kwargs):
                                     )
         print("sender - teslimat - doesnot exist")
         msg={"title" : "New delivery", "body" : "Bob wants new delivery"}
-        extra={"delivery_id": instance.id}
+        extra={"delivery_id": instance.pk}
         print(msg)
         device.send_message(message=msg, sound="default", category="ID_CATEGORY_DELIVERY", extra=extra)
 
