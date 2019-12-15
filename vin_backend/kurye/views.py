@@ -262,7 +262,7 @@ def courier_get_self_data(request):
                         'longitude': rest_obj.boylam
                     }
     else:
-        restaurant = ""
+        restaurant = None
 
     tesl_id = user.aktif_teslimat
     tesl_obj = Teslimat.objects.filter(pk=tesl_id).first()
@@ -302,7 +302,7 @@ def courier_get_self_data(request):
 
 
     else:
-        teslimat = ""
+        teslimat = None
 
     print("here is pic_profile:", user.pic_profile)
     if user.pic_profile:
