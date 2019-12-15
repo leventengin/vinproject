@@ -22,7 +22,7 @@ django-filter==2.1.0
 django-push-notifications==1.6.1
 django-rest-auth==0.9.3
 django-user-agents==0.4.0
-djangorestframework==3.8.2
+djangorestframework==3.9.1
 djangorestframework-jwt==1.11.0
 djangorestframework-simplejwt==4.3.0
 gunicorn==19.7.1
