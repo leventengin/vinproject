@@ -1,6 +1,6 @@
 from django.contrib import admin
-from .models import User, Firma, AnaFirma, Teslimat, IslemTeslimat, Bildirim, Bahsis, ArtiMotorcu
-from .models import FaturaDetay, FaturaToplam, Fiyat, EkFiyat, Il, Ilce, Mahalle
+from .models import User, Restaurant, Company, Delivery, Order, Notification, Tip, ExtraCourier
+from .models import InvoiceDetail, InvoiceTotal, StandardPrice, AddedPrice, City, Town, District, Courier
 from django.contrib.auth.forms import UserChangeForm, UserCreationForm
 from django.contrib.auth.admin import UserAdmin
 from django import forms
@@ -15,11 +15,11 @@ class MyUserAdmin(UserAdmin):
     # Yeni Form
     form = MyUserChangeForm
     # Görünmesi gerekenler
-    list_display = UserAdmin.list_display+('durum',)
-    search_fields = UserAdmin.search_fields+('durum',)
+    list_display = UserAdmin.list_display+('user_type',)
+    search_fields = UserAdmin.search_fields+('user_type',)
     # Yeni alanlar
     fieldsets = UserAdmin.fieldsets + (
-            (None, {'fields': ('tipi', 'durum', 'aktif_firma', 'aktif_teslimat', 'aktif_islem', 'sira', 'kaydolunan_restoranlar', 'enlem', 'boylam', 'aktif', 'tel_no', 'pin', 'device_platform', 'device_id', 'pic_profile')}),
+            (None, {'fields': ('user_type', 'pic_profile',)}),
     )
 
 
@@ -40,18 +40,19 @@ class MyUserCreationForm(UserCreationForm):
 
 # MyUserAdmin sınıfı ile genişlettik.
 admin.site.register(User, MyUserAdmin)# Register your models here.
-admin.site.register(Firma)
-admin.site.register(AnaFirma)
-admin.site.register(Teslimat)
-admin.site.register(IslemTeslimat)
-admin.site.register(Bildirim)
-admin.site.register(Bahsis)
-admin.site.register(ArtiMotorcu)
-admin.site.register(FaturaDetay)
-admin.site.register(FaturaToplam)
-admin.site.register(Fiyat)
-admin.site.register(EkFiyat)
-admin.site.register(Il)
-admin.site.register(Ilce)
-admin.site.register(Mahalle)
+admin.site.register(Restaurant)
+admin.site.register(Company)
+admin.site.register(Delivery)
+admin.site.register(Order)
+admin.site.register(Courier)
+admin.site.register(Notification)
+admin.site.register(Tip)
+admin.site.register(ExtraCourier)
+admin.site.register(InvoiceTotal)
+admin.site.register(InvoiceDetail)
+admin.site.register(StandardPrice)
+admin.site.register(AddedPrice)
+admin.site.register(City)
+admin.site.register(Town)
+admin.site.register(District)
 

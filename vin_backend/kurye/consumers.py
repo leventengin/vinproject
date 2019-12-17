@@ -7,7 +7,7 @@ from django.contrib.auth import get_user_model
 from .restlist import calculate_distance, siraya_gir
 from channels.layers import get_channel_layer
 import requests
-from .models import Firma
+from .models import Restaurant, Courier
 from decimal import Decimal
 
 
@@ -63,34 +63,21 @@ class KuryeConsumer(AsyncWebsocketConsumer):
         #user = request.user
         #print(user)
         User = get_user_model()
-        user = User.objects.get(id=user_id)
+        kurye = Courier.objects.get(user_id=user_id)
         print("user inside update location", user)
-        if user.durum == "1":
-            bagli_restoran_id = user.aktif_firma
-            restoran_obj = Firma.objects.filter(pk=bagli_restoran_id).first()       
-            distance = calculate_distance(latitude, longitude, restoran_obj.enlem, restoran_obj.boylam )
+        if kurye.durum == "1"  and kurye.active_restaurant:
+            restoran_obj = kurye.active_restaurant       
+            distance = calculate_distance(latitude, longitude, restoran_obj.latitude, restoran_obj.longitude )
             print("-------")
             print(distance)
             if (distance < 20):
-                user.durum = "3"
-                user.sira = siraya_gir(restoran_obj.id)
-        user.enlem = latitude
-        user.boylam = longitude
-        user.save()
-        #db_obj = {"courier_status": user.durum, "queue_order": user.sira}
+                kurye.state = "3"
+                kurye.queue = siraya_gir(restoran_obj.id)
+        kurye.latitude = latitude
+        kurye.longitude = longitude
+        kurye.save()
         return None
 
-
-
-    @database_sync_to_async
-    def _get_order(self):
-        user = request.user
-        print("_get_order", user.durum, "-", user.sira)
-        order_obj = {"type": "location_response", 
-                     "courier_status": user.durum, 
-                     "queue_order": user.sira
-                     }
-        return order_obj
 
 
 

@@ -1,9 +1,9 @@
 
 from rest_framework import viewsets
 from django.conf import settings
-from .models import User, AnaFirma, Firma, WSClient, Teslimat, IslemTeslimat
-from .serializers import UserSerializer, AnaFirmaSerializer, FirmaSerializer
-from .serializers import TeslimatSerializer, IslemTeslimatSerializer
+from .models import User, Company, Restaurant, Delivery, Order, Courier
+from .serializers import UserSerializer, CompanySerializer, RestaurantSerializer, CourierSerializer
+from .serializers import DeliverySerializer, OrderSerializer
 from django.contrib.auth import get_user_model
 from django.middleware.csrf import get_token
 from rest_framework.authtoken.models import Token
@@ -57,24 +57,21 @@ class UserViewSet(viewsets.ModelViewSet):
     User = get_user_model()
     queryset = User.objects.all()
 
-class AnaFirmaViewSet(viewsets.ModelViewSet):
-    serializer_class = AnaFirmaSerializer
-    queryset = AnaFirma.objects.all()
+class CompanyViewSet(viewsets.ModelViewSet):
+    serializer_class = CompanySerializer
+    queryset = Company.objects.all()
 
+class RestaurantViewSet(viewsets.ModelViewSet):
+    serializer_class = RestaurantSerializer
+    queryset = Restaurant.objects.all()
 
-class FirmaViewSet(viewsets.ModelViewSet):
-    serializer_class = FirmaSerializer
-    queryset = Firma.objects.all()
+class DeliveryViewSet(viewsets.ModelViewSet):
+    serializer_class = DeliverySerializer
+    queryset = Delivery.objects.all()
 
-
-class TeslimatViewSet(viewsets.ModelViewSet):
-    serializer_class = TeslimatSerializer
-    queryset = Teslimat.objects.all()
-
-
-class IslemTeslimatViewSet(viewsets.ModelViewSet):
-    serializer_class = IslemTeslimatSerializer
-    queryset = IslemTeslimat.objects.all()
+class OrderViewSet(viewsets.ModelViewSet):
+    serializer_class = OrderSerializer
+    queryset = Order.objects.all()
 
 
 
@@ -97,7 +94,7 @@ def pin_login(request):
     User=get_user_model()
 
     try:
-        user = User.objects.get(pin=pin)
+        kurye = Courier.objects.get(pin=pin)
     except:
         return Response({'success': False,
                          'message': 'Pin tanımlı değil',
@@ -105,14 +102,14 @@ def pin_login(request):
                          }},
                          status=HTTP_400_BAD_REQUEST)
 
-    if user.is_active is False:
+    if kurye.user_courier.is_active is False:
         return Response({'success': False,
                          'message': 'Kullanıcı aktif değil',
                          'response' : {
                          }},
                          status=HTTP_400_BAD_REQUEST)
 
-    if user.aktif is False:
+    if kurye.active_worker is False:
         return Response({'success': False,
                          'message': 'Hesap kapalı',
                          'response' : {
@@ -121,12 +118,12 @@ def pin_login(request):
     
     new_password = _pw()
     #print("new password", new_password)
-    user.set_password(new_password)
-    user.save()
+    kurye.user_courier.set_password(new_password)
+    kurye.user_courier.save()
 
-    print(user.username, '/', user.password)
+    print(kurye.user_courier.username, '/', kurye.user_courier.password)
     #json_data = JsonResponse({'username':user.username, 'password': user.password})
-    json_data = {'username':user.username, 'password': new_password}
+    json_data = {'username':kurye.user_courier.username, 'password': new_password}
     print(json_data)
 
     response_login = requests.post(
@@ -233,7 +230,9 @@ def courier_get_self_data(request):
     print("-------------login_courier---------------")
 
     user = request.user
-    print(user)
+    #User=get_user_model() 
+    #user = User.objects.get()
+    print(user, user.id)
 
     if user.is_active is False:
         return Response({'success': False,
@@ -242,149 +241,27 @@ def courier_get_self_data(request):
                          }},
                          status=HTTP_400_BAD_REQUEST)
 
-    if user.aktif is False:
+
+    kurye = Courier.objects.get(user_courier=user)
+    print(kurye)
+    if kurye.active_worker is False:
         return Response({'success': False,
-                         'message': 'Kullanıcı silinmiş',
+                         'message': 'Kullanıcı aktif değil',
                          'response' : {
                          }},
                          status=HTTP_400_BAD_REQUEST)
 
-    rest_id = user.aktif_firma
-    rest_obj = Firma.objects.filter(pk=rest_id).first()
-
-    if rest_obj:
-        restaurant = {
-                        'id': rest_id,
-                        'restaurant_name': rest_obj.firma_adi,
-                        'tel_no': rest_obj.tel_no,
-                        'allow_self_delivery': rest_obj.allow_self_delivery,
-                        'latitude': rest_obj.enlem,
-                        'longitude': rest_obj.boylam
-                    }
-    else:
-        restaurant = None
-
-    tesl_id = user.aktif_teslimat
-    tesl_obj = Teslimat.objects.filter(pk=tesl_id).first()
-
-    if tesl_obj:
-        tesl_id = tesl_obj.id
-        islem_obj = IslemTeslimat.objects.filter(teslimat=tesl_id)
-        details = []
-        if islem_obj:
-            for islem in islem_obj:
-                isl_arr = {
-                    'id': islem.id,
-                    'delivery': islem.teslimat.id,
-                    'type': islem.islem_tipi,
-                    'name': islem.tam_isim,
-                    'tel_no': islem.tel_no,
-                    'address': islem.address,
-                    'latitude': islem.enlem,
-                    'longitude': islem.boylam,
-                    'non_delivery_reason': islem.teslim_edilmedi_sebep, 
-                    'non_payment_reason': islem.odeme_alinmadi_sebep 
-                }
-                details.append(isl_arr)
-        
-        teslimat = {
-                    'id': tesl_obj.id,
-                    'courier_id': tesl_obj.kurye.id,
-                    'restaurant_id': tesl_obj.firma.user.id,
-                    'count': tesl_obj.adet,
-                    'active_count': tesl_obj.gecerli_adet,
-                    'sos': tesl_obj.sos,
-                    'sos_reason': tesl_obj.sos_sebep,
-                    'sos_result': tesl_obj.sos_sonuc,
-                    'orders': details
-        }
-
-
-
-    else:
-        teslimat = None
-
-    print("here is pic_profile:", user.pic_profile)
-    if user.pic_profile:
-        pic_profile = BASE_URL + user.pic_profile.url
-    else:
-        pic_profile = ""
+  
+    serializer = CourierSerializer(kurye)
 
     return Response({'success': True,
                     'message': 'Başarılı login',
-                    'response':{
-                            'courier': { 
-                                        'id': user.id,
-                                        'first_name': user.first_name,
-                                        'last_name': user.last_name,   
-                                        'pic_profile': pic_profile,                   
-                                        'restaurant_id': user.aktif_firma,
-                                        'pin': user.pin,
-                                        'state': user.durum,
-                                        'queue_order': user.sira,
-                                        'device_platform': user.device_platform,
-                                        'device_id': user.device_id,
-                                        'restaurants': user.kaydolunan_restoranlar
-                                        },
-                            'restaurant': restaurant,
-                            'delivery': teslimat,                       
-                    }},
+                    'response': serializer.data                
+                    },
                     status=HTTP_200_OK)
 
 
 
-
-"""
-@csrf_exempt
-@api_view(["POST"])
-@permission_classes([permissions.IsAuthenticated,])
-def send_location(request):
-    print("-------------send location---------------")
-    token = request.data.get("token")
-    latitude = request.data.get("latitude")
-    longitude = request.data.get("longitude")
-    print(token)
-    print(latitude)
-    print(longitude)
-    if not token or not latitude or not longitude:
-        return Response({'success': 'false',
-                        'message': 'Eksik bilgi gönderildi',
-                        'courier_status': ''},
-                        status=HTTP_400_BAD_REQUEST)
-
-    try:
-        token_obj = Token.objects.get(key=token)
-    except:
-        return Response({'success': 'false',
-                        'message': 'Token bulunamadı',
-                        'courier_status': ''},
-                        status=HTTP_400_BAD_REQUEST)
-
-    user = token_obj.user
-
-    if user.is_active is False:
-        return Response({'success': 'false',
-                        'message': 'Kullanıcı aktif değil',
-                        'courier_status': ''},
-                        status=HTTP_400_BAD_REQUEST)
-
-    if user.aktif is False:
-        return Response({'success': 'false',
-                        'message': 'Kullanıcı aktif değil, silinmiş',
-                        'courier_status': ''},
-                        status=HTTP_400_BAD_REQUEST)
-
-    #token, created = Token.objects.get_or_create(user=user)
-
-    user.enlem = latitude
-    user.boylam = longitude
-    user.save()
-
-    return Response({'success': 'true',
-                    'message': 'Başarılı',
-                    'courier_status': user.durum},
-                    status=HTTP_200_OK)
-"""
 
 
 
@@ -413,12 +290,15 @@ def start_working(request):
                          }},
                          status=HTTP_400_BAD_REQUEST)
 
-    if user.aktif is False:
+    kurye = Courier.objects.get(user_courier=user)
+    print(kurye)
+    if kurye.active_worker is False:
         return Response({'success': False,
-                         'message': 'Kullanıcı silinmiş',
+                         'message': 'Kullanıcı aktif değil',
                          'response' : {
                          }},
                          status=HTTP_400_BAD_REQUEST)
+
 
     # en yakındaki restoranları listele, yoksa boş dön
     # kayıtlı değilse kayıtlı değil bilgisi dönüyor
@@ -460,62 +340,34 @@ def select_restaurant(request):
                          }},
                          status=HTTP_400_BAD_REQUEST)
 
-    if user.aktif is False:
+    kurye = Courier.objects.get(user_courier=user)
+    print(kurye)
+    if kurye.active_worker is False:
         return Response({'success': False,
-                         'message': 'Kullanıcı silinmiş',
+                         'message': 'Kullanıcı aktif değil',
                          'response' : {
                          }},
                          status=HTTP_400_BAD_REQUEST)
 
 
-    rest_obj = Firma.objects.filter(user_id=rest_id).first()
-    print(rest_obj)
-    firma_adi = rest_obj.firma_adi
-    tel_no = rest_obj.tel_no
-    if rest_obj.allow_self_delivery:
-        allow_self_delivery = True
-    else:
-        allow_self_delivery = False
+    rest_obj = Restaurant.objects.filter(user_restaurant_id=rest_id).first()
 
-    yeni_sira = siraya_gir(rest_obj.user.id)
-    user.sira = yeni_sira
-    user.aktif_firma = rest_obj.user.id
-    user.durum = "1"
-    user.save()
+    yeni_sira = siraya_gir(rest_obj.user_restaurant.id)
+    
+    kurye.queue = yeni_sira
+    kurye.active_restaurant = rest_obj
+    kurye.state = "1"
+    kurye.save()
 
-    print("here is pic_profile:", user.pic_profile)
-    if user.pic_profile:
-        pic_profile = BASE_URL + user.pic_profile.url
-    else:
-        pic_profile = ""
+
+    serializer = CourierSerializer(kurye)
 
     return Response({'success': True,
-                     'message': 'Başarılı',
-                     'response' : {
-                         'restaurant': {
-                            'id': rest_obj.user.id,
-                            'restaurant_name': firma_adi,
-                            'tel_no': tel_no,
-                            'allow_self_delivery': allow_self_delivery,
-                            'latitude': rest_obj.enlem,
-                            'longitude': rest_obj.boylam
-                         },
-                         'courier': {
-                            'id': user.id,
-                            'first_name': user.first_name,
-                            'last_name': user.last_name,   
-                            'pic_profile': pic_profile,                   
-                            'restaurant_id': user.aktif_firma,
-                            'pin': user.pin,
-                            'state': user.durum,
-                            'queue_order': yeni_sira,
-                            'device_platform': user.device_platform,
-                            'device_id': user.device_id,
-                            'restaurants': user.kaydolunan_restoranlar
-                         }
-                     }},
-                     status=HTTP_200_OK)
-    
+                    'message': 'Restoran seçildi',
+                    'response': serializer.data                
+                    },
+                    status=HTTP_200_OK)
+
 
 
 
@@ -544,82 +396,25 @@ def get_delivery(request):
                          }},
                          status=HTTP_400_BAD_REQUEST)
 
-    if user.aktif is False:
+    kurye = Courier.objects.get(user_courier=user)
+    print(kurye)
+    if kurye.active_worker is False:
         return Response({'success': False,
-                         'message': 'Kullanıcı silinmiş',
+                         'message': 'Kullanıcı aktif değil',
                          'response' : {
                          }},
                          status=HTTP_400_BAD_REQUEST)
 
 
-    tesl_obj = Teslimat.objects.filter(pk=delivery_id).first()
-    if not tesl_obj:
-        return Response({'success': False,
-                         'message': 'Teslimat yok',
-                         'response' : {
-                         }},
-                         status=HTTP_400_BAD_REQUEST)
 
-
-    if tesl_obj:
-        tesl_id = tesl_obj.id
-        courier_id = tesl_obj.kurye.id
-        restaurant_id = tesl_obj.firma.user.id
-        count = tesl_obj.adet
-        active_count = tesl_obj.gecerli_adet
-        sos = tesl_obj.sos
-        sos_sebep = tesl_obj.sos_sebep
-        sos_sonuc = tesl_obj.sos_sonuc
-        islem_obj = IslemTeslimat.objects.filter(teslimat=tesl_id)
-        details = []
-        if islem_obj:
-            for islem in islem_obj:
-                isl_arr = {
-                    'id': islem.id,
-                    'delivery': islem.teslimat.id,
-                    'type': islem.islem_tipi,
-                    'name': islem.tam_isim,
-                    'tel_no': islem.tel_no,
-                    'address': islem.address,
-                    'latitude': islem.enlem,
-                    'longitude': islem.boylam,
-                    'non_delivery_reason': islem.teslim_edilmedi_sebep, 
-                    'non_payment_reason': islem.odeme_alinmadi_sebep 
-                    #'sos_reason': islem.sos_sebep, 
-                    #'cancel_sos_result': islem.sos_kaldir_sonuc 
-                }
-                details.append(isl_arr)
-
-    else:
-        tesl_id = ""
-        courier_id = ""
-        restaurant_id = ""
-        count = ""
-        active_count = ""  
-        details = []
-        sos = False
-        sos_sebep = ""
-        sos_sonuc = ""
-
+    delivery_obj = Delivery.objects.filter(pk=delivery_id).first()
+    serializer = DeliverySerializer(delivery_obj)
 
     return Response({'success': True,
-                    'message': 'Başarılı login',
-                    'response':{
-                            'delivery': {
-                                            'id': tesl_id,
-                                            'courier_id': courier_id,
-                                            'restaurant_id': restaurant_id,
-                                            'count': count,
-                                            'active_count': active_count,
-                                            'sos': sos,
-                                            'sos_reason': sos_sebep,
-                                            'sos_result': sos_sonuc,
-                                            'orders': details
-                                        }                                       
-                    }},
+                    'message': 'Başarıyla kaydedildi',
+                    'response': serializer.data                
+                    },
                     status=HTTP_200_OK)
-    
-
 
 
 
@@ -651,24 +446,31 @@ def update_device(request):
                          }},
                          status=HTTP_400_BAD_REQUEST)
 
-    if user.aktif is False:
+    kurye = Courier.objects.get(user_courier=user)
+    print(kurye)
+    if kurye.active_worker is False:
         return Response({'success': False,
-                         'message': 'Kullanıcı silinmiş',
+                         'message': 'Kullanıcı aktif değil',
                          'response' : {
                          }},
                          status=HTTP_400_BAD_REQUEST)
 
 
-    user.device_platform = device_platform
-    user.device_id = device_id
-    user.save()
+
+    kurye.device_platform = device_platform
+    kurye.device_id = device_id
+    kurye.save()
+  
+    serializer = CourierSerializer(kurye)
 
     return Response({'success': True,
                     'message': 'Başarıyla kaydedildi',
-                    'response':{                        
-                    }},
+                    'response': serializer.data                
+                    },
                     status=HTTP_200_OK)
-    
+
+
+
     
 
 
@@ -815,7 +617,7 @@ def record_courier_check(request):
                         status=HTTP_400_BAD_REQUEST)
 
     token_obj = Token.objects.get(key=token)
-    firma_obj = Firma.objects.filter(id=token_obj.user).first()
+    firma_obj = Restaurant.objects.filter(id=token_obj.user).first()
 
     if not(firma_obj):
         return Response({'success': 'false',
@@ -883,7 +685,7 @@ def record_courier_accept(request):
 
 
     token_obj = Token.objects.get(key=token)
-    firma_obj = Firma.objects.filter(id=token_obj.user).first()
+    firma_obj = Restaurant.objects.filter(id=token_obj.user).first()
 
     if not(firma_obj):
         return Response({'success': 'false',
@@ -1097,9 +899,11 @@ def create_delivery(request):
                          }},
                          status=HTTP_400_BAD_REQUEST)
 
-    if user.aktif is False:
+    kurye = Courier.objects.get(user_courier=user)
+    print(kurye)
+    if kurye.active_worker is False:
         return Response({'success': False,
-                         'message': 'Kullanıcı silinmiş',
+                         'message': 'Kullanıcı aktif değil',
                          'response' : {
                          }},
                          status=HTTP_400_BAD_REQUEST)
@@ -1107,23 +911,25 @@ def create_delivery(request):
 
     # not: restorandan gelen bilgilere göre yeni bir teslimat ve ilişkili işlemler yarat 
     print("teslimat yaratma öncesi")
-    tesl_obj = Teslimat.objects.create( firma_id=restaurant_id,
-                                        kurye_id=courier_id,
-                                        adet=count,
-                                        gecerli_adet=count
+    delivery_obj = Delivery.objects.create( 
+                                        courier_id=courier_id,
+                                        restaurant_id=restaurant_id,
+                                        count=count,
+                                        active_count=count
                                         )
+   
     print( "islem teslimat yaratma öncesi")
     print(address_list[0])
-    print(address_list[0]["name"])
+    print(address_list[1])
     i = 0
     x = len(address_list)
     print("len", x)
     while i < x:
-        islem_obj = IslemTeslimat.objects.create(teslimat=tesl_obj,
-                                                tam_isim=address_list[i]["name"],
-                                                tel_no=address_list[i]["tel_no"],
-                                                address=address_list[i]["address"]
-                                                )
+        order_obj = Order.objects.create(delivery=delivery_obj,
+                                        full_name=address_list[i]["name"],
+                                        tel_no=address_list[i]["tel_no"],
+                                        address=address_list[i]["address"]
+                                        )
         i = i + 1
     
 
@@ -1132,12 +938,15 @@ def create_delivery(request):
     #
 
 
+    serializer = DeliverySerializer(delivery_obj)
+
     return Response({'success': True,
-                     'message': 'Başarılı',
-                     'response' : {
-                        'delivery_id': tesl_obj.id
-                     }},
+                    'message': 'Başarıyla kaydedildi',
+                    'response': {"delivery":serializer.data                
+                    }},
                     status=HTTP_200_OK)
+
+
 
 
 
@@ -1173,9 +982,11 @@ def update_delivery(request):
                          }},
                          status=HTTP_400_BAD_REQUEST)
 
-    if user.aktif is False:
+    kurye = Courier.objects.get(user_courier=user)
+    print(kurye)
+    if kurye.active_worker is False:
         return Response({'success': False,
-                         'message': 'Kullanıcı silinmiş',
+                         'message': 'Kullanıcı aktif değil',
                          'response' : {
                          }},
                          status=HTTP_400_BAD_REQUEST)
@@ -1183,8 +994,8 @@ def update_delivery(request):
 
     # not: restorandan gelen bilgilere göre teslimat ve işlemleri düzenle(update) 
     
-    tesl_obj = Teslimat.objects.filter(id=delivery_id).first()
-    if not tesl_obj:
+    delivery_obj = Delivery.objects.filter(id=delivery_id).first()
+    if not delivery_obj:
         return Response({'success': False,
                          'message': 'Teslimat kaydı yok',
                          'response' : {
@@ -1192,26 +1003,26 @@ def update_delivery(request):
                          status=HTTP_400_BAD_REQUEST)
 
 
-    tesl_obj.firma_id = restaurant_id
-    tesl_obj.kurye_id = courier_id
-    tesl_obj.adet = count
-    tesl_obj.gecerli_adet = count
-    tesl_obj.save()
+    delivery_obj.restaurant_id = restaurant_id
+    delivery_obj.courier_id = courier_id
+    delivery_obj.count = count
+    delivery_obj.active_count = count
+    delivery_obj.save()
 
-    islem_obj = IslemTeslimat.objects.filter(teslimat=tesl_obj)
-    if islem_obj:
-        for islem in islem_obj:
-            islem.delete()
+    order_obj = Order.objects.filter(delivery=delivery_obj)
+    if order_obj:
+        for order in order_obj:
+            order.delete()
 
     i = 0
     x = len(address_list)
     print("len", x)
     while i < x:
-        islem_obj = IslemTeslimat.objects.create(teslimat=tesl_obj,
-                                                tam_isim=address_list[i]["name"],
-                                                tel_no=address_list[i]["tel_no"],
-                                                address=address_list[i]["address"]
-                                                )
+        order_obj = Order.objects.create(delivery=delivery_obj,
+                                        full_name=address_list[i]["name"],
+                                        tel_no=address_list[i]["tel_no"],
+                                        address=address_list[i]["address"]
+                                        )
         i = i + 1
 
     #
@@ -1219,12 +1030,15 @@ def update_delivery(request):
     #
 
 
+    serializer = DeliverySerializer(delivery_obj)
+
     return Response({'success': True,
-                     'message': 'Başarılı',
-                     'response' : {
-                        'delivery_id': tesl_obj.id
-                     }},
+                    'message': 'Başarıyla güncellendi',
+                    'response': {"delivery":serializer.data                
+                    }},
                     status=HTTP_200_OK)
+
+
 
 
 
@@ -1253,9 +1067,10 @@ def delivery_approve_reject(request):
                          }},
                          status=HTTP_400_BAD_REQUEST)
 
-    if user.aktif is False:
+    kurye = Courier.objects.get(user_courier=user)
+    if kurye.active_worker is False:
         return Response({'success': False,
-                         'message': 'Kullanıcı silinmiş',
+                         'message': 'Kullanıcı aktif değil',
                          'response' : {
                          }},
                          status=HTTP_400_BAD_REQUEST)
@@ -1263,8 +1078,8 @@ def delivery_approve_reject(request):
 
     # not: id'ye göre teslimat ve işlem bilgilerini al 
     
-    tesl_obj = Teslimat.objects.filter(id=delivery_id).first()
-    if not tesl_obj:
+    delivery_obj = Delivery.objects.filter(id=delivery_id).first()
+    if not delivery_obj:
         return Response({'success': False,
                          'message': 'Teslimat kaydı yok',
                          'response' : {
@@ -1272,10 +1087,10 @@ def delivery_approve_reject(request):
                          status=HTTP_400_BAD_REQUEST)
 
 
-    islem_obj = IslemTeslimat.objects.filter(teslimat=tesl_obj)
+    order_obj = Order.objects.filter(delivery=delivery_obj)
     if not islem_obj:
         return Response({'success': False,
-                         'message': 'Teslimat detay kaydı yok',
+                         'message': 'Teslimat sipariş kaydı yok',
                          'response' : {
                          }},
                          status=HTTP_400_BAD_REQUEST)
@@ -1286,16 +1101,113 @@ def delivery_approve_reject(request):
         #  new order must be send
 
     else: 
-        tesl_obj.onay = True
-        tesl_obj.save()
+        delivery_obj.confirm = True
+        delivery_obj.save()
 
-    
+        kurye.state = "2"
+        kurye.active_delivery = delivery_obj
+        kurye.save()
+
+
+    serializer = DeliverySerializer(delivery_obj)
 
     return Response({'success': True,
-                     'message': 'Başarılı',
-                     'response' : {
-                     }},
+                    'message': 'Onaylandı',
+                    'response': {"delivery":serializer.data                
+                    }},
                     status=HTTP_200_OK)
+
+
+
+
+@csrf_exempt
+@api_view(["POST"])
+@permission_classes([permissions.IsAuthenticated,])
+def create_self_delivery(request):
+    print("-------------create self delivery---------------")
+    count = request.data.get("count")
+    courier_id = request.data.get("courier_id")
+    restaurant_id = request.data.get("restaurant_id")
+    print(count)
+    print(courier_id)
+    print(restaurant_id)
+    if  not count  or not courier_id or not restaurant_id:
+        return Response({'success': False,
+                         'message': 'Eksik bilgi gönderildi',
+                         'response' : {
+                         }},
+                         status=HTTP_400_BAD_REQUEST)
+
+    user = request.user
+
+    if user.is_active is False:
+        return Response({'success': False,
+                         'message': 'Kulanıcı aktif değil',
+                         'response' : {
+                         }},
+                         status=HTTP_400_BAD_REQUEST)
+
+    kurye = Courier.objects.get(user_courier=user)
+    print(kurye)
+    if kurye.active_worker is False:
+        return Response({'success': False,
+                         'message': 'Kullanıcı aktif değil',
+                         'response' : {
+                         }},
+                         status=HTTP_400_BAD_REQUEST)
+
+
+    # not: restorandan gelen bilgilere göre yeni bir teslimat ve ilişkili işlemler yarat 
+    print("teslimat yaratma öncesi")
+    delivery_obj = Delivery.objects.create( 
+                                        courier_id=courier_id,
+                                        restaurant_id=restaurant_id,
+                                        count=count,
+                                        active_count=count,
+                                        confirm=True,
+                                        self_delivery=True
+                                        )
+   
+ 
+    i = 0
+    x = count
+    print("len", x)
+    while i < x:
+        order_obj = Order.objects.create(delivery=delivery_obj,
+                                        full_name="",
+                                        tel_no="",
+                                        address=""
+                                        )
+        i = i + 1
+    
+
+    kurye.state = "2"
+    kurye.active_delivery = delivery_obj
+    kurye.save()
+
+
+    serializer = DeliverySerializer(delivery_obj)
+
+    return Response({'success': True,
+                    'message': 'Onaylandı',
+                    'response': {"delivery":serializer.data                
+                    }},
+                    status=HTTP_200_OK)
+
+
+
+
+    serializer = DeliverySerializer(delivery_obj)
+
+    return Response({'success': True,
+                    'message': 'Başarıyla kaydedildi',
+                    'response': {"delivery":serializer.data                
+                    }},
+                    status=HTTP_200_OK)
+
+
+
+
 
 
 
@@ -1331,9 +1243,10 @@ def delivery_process(request):
                          }},
                          status=HTTP_400_BAD_REQUEST)
 
-    if user.aktif is False:
+    kurye = Courier.objects.get(user_courier=user)
+    if kurye.active_worker is False:
         return Response({'success': False,
-                         'message': 'Kullanıcı silinmiş',
+                         'message': 'Kullanıcı aktif değil',
                          'response' : {
                          }},
                          status=HTTP_400_BAD_REQUEST)
@@ -1341,22 +1254,24 @@ def delivery_process(request):
 
     # not: id'ye göre teslimat ve işlem bilgilerini al 
     
-    tesl_obj = Teslimat.objects.filter(id=delivery_id).first()
-    if not tesl_obj:
+    delivery_obj = Delivery.objects.filter(id=delivery_id).first()
+    if not delivery_obj:
         return Response({'success': False,
                          'message': 'Teslimat kaydı yok',
                          'response' : {
                          }},
                          status=HTTP_400_BAD_REQUEST)
 
+    
+    order_obj = Order.objects.filter(delivery=delivery_obj).filter(delivery_type!="0").order_by('pk').first()
 
-    islem_obj = IslemTeslimat.objects.filter(id=process_id).first()
-    if not islem_obj:
+    if not order_obj:
         return Response({'success': False,
                          'message': 'Teslimat detay kaydı yok',
                          'response' : {
                          }},
                          status=HTTP_400_BAD_REQUEST)
+    
 
     #
     # burada gelen bilgiye göre teslimat işlemini gerçekleştir.
@@ -1366,55 +1281,55 @@ def delivery_process(request):
 
     if process_type == "1":
         print("case-1")
-        islem_obj.islem_tipi = process_type
-        islem_obj.save()
-        count = tesl_obj.gecerli_adet
+        order_obj.process_tipi = process_type
+        order_obj.save()
+        count = delivery_obj.active_count
         count = count -1
-        tesl_obj.gecerli_adet = count
-        tesl_obj.save()
+        delivery_obj.active_count = count
+        delivery_obj.save()
         if count > 1: 
             # burada bir sonraki sıradaki kişiye SMS at
             pass
         else: 
-            user.durum = "3"
-            user.save()
+            kurye.state = "3"
+            kurye.save()
 
     elif process_type == "2":
         print("case-2")
-        islem_obj.islem_tipi = process_type
-        islem_obj.odeme_alinmadi_sebep = nonpayment_reason
-        islem_obj.save()
-        count = tesl_obj.gecerli_adet
+        order_obj.process_tipi = process_type
+        order_obj.non_payment_reason = nonpayment_reason
+        order_obj.save()
+
+        count = delivery_obj.active_count
         count = count -1
-        tesl_obj.gecerli_adet = count
-        tesl_obj.save()
+        delivery_obj.active_count = count
+        delivery_obj.save()
         if count > 1: 
             # burada bir sonraki sıradaki kişiye SMS at
             pass
         else: 
-            user.durum = "3"
-            user.save()
+            kurye.state = "3"
+            kurye.save()
 
 
     elif process_type == "3":
         print("case-3")
-        islem_obj.islem_tipi = process_type
-        islem_obj.teslim_edilmedi_sebep = nondelivery_reason
-        islem_obj.save()
-        count = tesl_obj.gecerli_adet
+        order_obj.process_tipi = process_type
+        order_obj.non_delivery_reason = nondelivery_reason
+        order_obj.save()
+
+        count = delivery_obj.active_count
         count = count -1
-        tesl_obj.gecerli_adet = count
-        tesl_obj.save()
+        delivery_obj.active_count = count
+        delivery_obj.save()
         if count > 1: 
             # burada bir sonraki sıradaki kişiye SMS at
             pass
         else: 
-            user.durum = "3"
-            user.save()
+            kurye.state = "3"
+            kurye.save()
 
 
-
-    
     else:
         return Response({'success': False,
                          'message': 'İşlem tipi yanlış, kayıt dışı',
@@ -1424,13 +1339,14 @@ def delivery_process(request):
     
 
 
+    serializer = OrderSerializer(order_obj)
+
     return Response({'success': True,
-                     'message': 'Başarılı',
-                     'response' : {
-                        'courier_state': user.durum,
-                        'package_count': tesl_obj.gecerli_adet,
-                     }},
+                    'message': 'Onaylandı',
+                    'response': {"order":serializer.data                
+                    }},
                     status=HTTP_200_OK)
+
 
 
 
@@ -1448,20 +1364,20 @@ def quit_queue(request):
                          }},
                          status=HTTP_400_BAD_REQUEST)
 
-    if user.aktif is False:
+    kurye = Courier.objects.get(user_courier=user)
+    if kurye.active_worker is False:
         return Response({'success': False,
-                         'message': 'Kullanıcı silinmiş',
+                         'message': 'Kullanıcı aktif değil',
                          'response' : {
                          }},
                          status=HTTP_400_BAD_REQUEST)
 
-
     # sadece sırada ise sıradan çıkmaya izin ver
     
-    if user.durum == "1":
+    if kurye.state == "1":
         print("sırada")
-        user.durum = "4"
-        user.save()
+        kurye.state = "4"
+        kurye.save()
     else:
         return Response({'success': False,
                          'message': 'Kurye sırada değil!',
@@ -1471,12 +1387,15 @@ def quit_queue(request):
     
 
 
+    serializer = CourierSerializer(kurye)
+    response =  serializer.data
+
     return Response({'success': True,
                      'message': 'Başarılı',
-                     'response' : {
-                        'courier_state': user.durum,
-                     }},
+                     'response' : response
+                    },
                     status=HTTP_200_OK)
+
 
 
 
@@ -1494,20 +1413,22 @@ def enter_queue(request):
                          }},
                          status=HTTP_400_BAD_REQUEST)
 
-    if user.aktif is False:
+    kurye = Courier.objects.get(user_courier=user)
+    if kurye.active_worker is False:
         return Response({'success': False,
-                         'message': 'Kullanıcı silinmiş',
+                         'message': 'Kullanıcı aktif değil',
                          'response' : {
                          }},
                          status=HTTP_400_BAD_REQUEST)
 
 
     # sadece sırada ise sıradan çıkmaya izin ver
-    
-    if user.durum == "4":
+    print(kurye.state)
+ 
+    if  kurye.state == "4":
         print("sıradan çıkmış")
-        user.durum = "1"
-        user.save()
+        kurye.state = "1"
+        kurye.save()
     else:
         return Response({'success': False,
                          'message': 'Kurye sıradan çıkmış değil!',
@@ -1517,12 +1438,16 @@ def enter_queue(request):
     
 
 
+    serializer = CourierSerializer(kurye)
+    response =  serializer.data
+
     return Response({'success': True,
                      'message': 'Başarılı',
-                     'response' : {
-                        'courier_state': user.durum,
-                     }},
+                     'response' : response
+                    },
                     status=HTTP_200_OK)
+
+
 
 
 @csrf_exempt
@@ -1539,9 +1464,10 @@ def end_of_work(request):
                          }},
                          status=HTTP_400_BAD_REQUEST)
 
-    if user.aktif is False:
+    kurye = Courier.objects.get(user_courier=user)
+    if kurye.active_worker is False:
         return Response({'success': False,
-                         'message': 'Kullanıcı silinmiş',
+                         'message': 'Kullanıcı aktif değil',
                          'response' : {
                          }},
                          status=HTTP_400_BAD_REQUEST)
@@ -1549,10 +1475,10 @@ def end_of_work(request):
 
     # sadece sırada ise sıradan çıkmaya izin ver
     
-    if user.durum != "2":
+    if kurye.state != "2":
         print("iş bitiş")
-        user.durum = "0"
-        user.save()
+        kurye.state = "0"
+        kurye.save()
     else:
         return Response({'success': False,
                          'message': 'Servisteyken iş sonlandırılamaz!',
@@ -1562,13 +1488,147 @@ def end_of_work(request):
     
 
 
+    serializer = CourierSerializer(kurye)
+    response =  serializer.data
+
     return Response({'success': True,
                      'message': 'Başarılı',
-                     'response' : {
-                        'courier_state': user.durum,
-                     }},
+                     'response' : response
+                    },
                     status=HTTP_200_OK)
 
+
+
+
+@csrf_exempt
+@api_view(["POST"])
+@permission_classes([permissions.IsAuthenticated,])
+def sos(request):
+    print("-------------SOS--------------")
+    reason = request.data.get("reason")
+    print(reason)
+    if not reason:
+        return Response({'success': False,
+                         'message': 'Eksik bilgi gönderildi',
+                         'response' : {
+                         }},
+                         status=HTTP_400_BAD_REQUEST)
+                         
+    user = request.user
+    if user.is_active is False:
+        return Response({'success': False,
+                         'message': 'Kulanıcı aktif değil',
+                         'response' : {
+                         }},
+                         status=HTTP_400_BAD_REQUEST)
+
+    kurye = Courier.objects.get(user_courier=user)
+    if kurye.active_worker is False:
+        return Response({'success': False,
+                         'message': 'Kullanıcı aktif değil',
+                         'response' : {
+                         }},
+                         status=HTTP_400_BAD_REQUEST)
+
+
+
+
+    # sadece serviste ise SOS göndermeye izin ver
+    
+    if kurye.state == "2":
+        print("SOS")
+        kurye.state = "5"
+        kurye.save()        
+        delivery_obj = kurye.active_delivery
+        if delivery_obj:
+            delivery_obj.sos = True
+            delivery_obj.sos_reason = reason
+            delivery_obj.save()
+
+    else:
+        return Response({'success': False,
+                         'message': 'Servis dışında SOS gönderilemez!',
+                         'response' : {
+                         }},
+                         status=HTTP_400_BAD_REQUEST)
+    
+
+
+    serializer = CourierSerializer(kurye)
+    response =  serializer.data
+
+    return Response({'success': True,
+                     'message': 'Başarılı',
+                     'response' : response
+                    },
+                    status=HTTP_200_OK)
+
+
+
+
+@csrf_exempt
+@api_view(["POST"])
+@permission_classes([permissions.IsAuthenticated,])
+def sos_cancel(request):
+    print("-------------SOS Cancel -------------")
+    result = request.data.get("result")
+    print(result)
+
+    if not result:
+        return Response({'success': False,
+                         'message': 'Eksik bilgi gönderildi',
+                         'response' : {
+                         }},
+                         status=HTTP_400_BAD_REQUEST)
+
+    user = request.user
+    if user.is_active is False:
+        return Response({'success': False,
+                         'message': 'Kulanıcı aktif değil',
+                         'response' : {
+                         }},
+                         status=HTTP_400_BAD_REQUEST)
+
+    kurye = Courier.objects.get(user_courier=user)
+
+    if kurye.active_worker is False:
+        return Response({'success': False,
+                         'message': 'Kullanıcı aktif değil',
+                         'response' : {
+                         }},
+                         status=HTTP_400_BAD_REQUEST)
+
+
+    # sadece serviste ise SOS göndermeye izin ver
+    
+    if kurye.state == "5":
+        print("SOS Cancel")
+        kurye.state = "2"
+        kurye.save()
+
+        delivery_obj = kurye.active_delivery
+        if delivery_obj:
+            delivery_obj.sos = False
+            delivery_obj.sos_result = result
+            delivery_obj.save()
+
+    else:
+        return Response({'success': False,
+                         'message': 'SOS dışında çıkılamaz!',
+                         'response' : {
+                         }},
+                         status=HTTP_400_BAD_REQUEST)
+    
+
+
+    serializer = CourierSerializer(kurye)
+    response =  serializer.data
+
+    return Response({'success': True,
+                     'message': 'Başarılı',
+                     'response' : response
+                    },
+                    status=HTTP_200_OK)
 
 
 

@@ -1,4 +1,4 @@
-from .views import UserViewSet, AnaFirmaViewSet, FirmaViewSet, TeslimatViewSet, IslemTeslimatViewSet
+from .views import UserViewSet, CompanyViewSet, RestaurantViewSet, DeliveryViewSet, OrderViewSet
 from rest_framework.routers import DefaultRouter
 from django.conf import settings
 from django.conf.urls.static import static
@@ -21,10 +21,10 @@ urlpatterns = [
 """
 router = DefaultRouter()
 router.register(r'user', UserViewSet, base_name='user')
-router.register(r'anafirma', AnaFirmaViewSet, base_name='anafirma')
-router.register(r'firma', FirmaViewSet, base_name='firma')
-router.register(r'teslimat', TeslimatViewSet, base_name='teslimat')
-router.register(r'islemteslimat', IslemTeslimatViewSet, base_name='islemteslimat')
+router.register(r'firma', CompanyViewSet, base_name='firma')
+router.register(r'restoran', RestaurantViewSet, base_name='restoran')
+router.register(r'teslimat', DeliveryViewSet, base_name='teslimat')
+router.register(r'siparis', OrderViewSet, base_name='siparis')
 
 urlpatterns = [
     url(r'courier_get_self_data', views.courier_get_self_data),
@@ -35,9 +35,15 @@ urlpatterns = [
     url(r'update_device', views.update_device),      
     url(r'register_courier', views.register_courier),
     url(r'create_delivery', views.create_delivery),
+    url(r'create_self_delivery', views.create_self_delivery),    
     url(r'update_delivery', views.update_delivery),
     url(r'delivery_approve_reject', views.delivery_approve_reject),  
-    url(r'delivery_process', views.delivery_process),        
+    url(r'delivery_process', views.delivery_process),   
+    url(r'enter_queue', views.enter_queue),                
+    url(r'quit_queue', views.quit_queue),
+    url(r'end_of_work', views.end_of_work),  
+    url(r'sos', views.sos),
+    url(r'sos_cancel', views.sos_cancel),                
     url(r'record_courier_check', views.record_courier_check),
     url(r'record_courier_accept', views.record_courier_accept),   
     url(r'^token', TokenObtainPairView.as_view(), name='token_obtain_pair'),

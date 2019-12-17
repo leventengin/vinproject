@@ -1,8 +1,9 @@
 from django.conf import settings
-from .models import User, Firma
+from .models import Courier, Restaurant
 from django.contrib.auth import get_user_model
 import math
 from decimal import Decimal
+from .serializers import RestaurantSerializer
 
 
 def calculate_distance(latitude, longitude, rest_latitude, rest_longitude ):
@@ -39,29 +40,24 @@ def get_rest_list(latitude, longitude, user_id):
 
     User=get_user_model()
 
-    rest_obj = Firma.objects.all()
+    rest_obj = Restaurant.objects.all()
     list_rest = []
 
     for rest_inst  in rest_obj: 
-        distance = calculate_distance(latitude, longitude, rest_inst.enlem, rest_inst.boylam)
+        distance = calculate_distance(latitude, longitude, rest_inst.latitude, rest_inst.longitude)
         #motorcu o restorana kayıtlı mı bak
         print("---distance---")
-        print(distance)
+        print(rest_inst.name, "distance", distance)
         #kayitlilar = rest_inst.kayitli_motorcular
         #kayitli = False
         #if user_id in kayitlilar:
         #    kayitli = True
-        arr_item = {"id": rest_inst.user.id, 
-                    "restaurant_name": rest_inst.firma_adi, 
-                    "tel_no": rest_inst.tel_no,
-                    "allow_self_delivery": rest_inst.allow_self_delivery,
-                    "latitude": rest_inst.enlem,
-                    "longitude": rest_inst.boylam,
-                    "distance": distance 
-                    }
+
+        serializer = RestaurantSerializer(rest_inst)
+        arr_item = serializer.data
         list_rest.append(arr_item)
-        
-    list_rest.sort(key = lambda x: x['distance'])
+   
+    #list_rest.sort(key = lambda x: x['distance'])
     print(list_rest)
     return list_rest
 
@@ -71,11 +67,10 @@ def get_rest_list(latitude, longitude, user_id):
 # this is the number to be given to the new courier in the database field
 # while changing its status to -3 which means in the queue
 
-def siraya_gir(firma_id):
+def siraya_gir(rest_id):
     print("siraya_gir")
-    print(firma_id)
-    User=get_user_model()
-    motorcu_obj =  User.objects.filter(aktif_firma=firma_id).filter(durum="1")
+    print(rest_id)
+    motorcu_obj =  Courier.objects.filter(active_restaurant=rest_id).filter(state="1")
     print(motorcu_obj)
     sira = motorcu_obj.count() + 1
     return sira
@@ -88,18 +83,18 @@ def siraya_gir(firma_id):
 # updating the model KayitliMotorcular
 # it does not update the  status of related courier, it must be done in calling function 
 
-def siradan_cik(firma_id, motorcu_id, sira):
+def siradan_cik(rest_id, courier_id, sira):
     print("siradan_cik")
-    print(firma_id)
-    print(motorcu_id) 
+    print(rest_id)
+    print(courier_id) 
     print(sira) 
     User=get_user_model()
-    motorcu_obj =  User.objects.filter(aktif_firma=firma_id).filter(durum="3")
+    motorcu_obj =  User.objects.filter(active_restaurant=rest_id).filter(state="3")
     for motorcu in motorcu_obj:
-        if motorcu.sira > sira:
-            sayi = int(motorcu.sira)
+        if motorcu.queue > sira:
+            sayi = motorcu.queue
             sayi = sayi - 1
-            motorcu.sira = str(sayi)
+            motorcu.queue = sayi
             motorcu.save()
     return None
 

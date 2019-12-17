@@ -8,7 +8,9 @@ from django.contrib.postgres.fields import ArrayField, JSONField
 import requests
 from django.contrib.auth import get_user_model
 from push_notifications.models import APNSDevice, GCMDevice
-
+from channels.db import database_sync_to_async
+from asgiref.sync import async_to_sync
+#from .consumers import location_response 
 
 
 
@@ -86,20 +88,7 @@ DEVICE_PLATFORM = (
 
 class User(AbstractUser):
     pass
-    tipi = models.CharField(max_length=2, default="0")
-    durum = models.CharField(max_length=2, default="0")
-    aktif_firma = models.IntegerField(default=0)
-    aktif_teslimat = models.IntegerField(default=0)
-    aktif_islem = models.IntegerField(default=0)
-    sira = models.IntegerField(default=0)
-    enlem = models.DecimalField(max_digits=16, decimal_places=12, default="0.0")
-    boylam = models.DecimalField(max_digits=16, decimal_places=12, default="0.0")
-    aktif = models.BooleanField(default=True)
-    tel_no = models.CharField(max_length=10, default="")
-    pin = models.CharField(max_length=6, default="")
-    kaydolunan_restoranlar = ArrayField(models.IntegerField(), blank=True, null=True)
-    device_platform = models.CharField(max_length=1, choices=DEVICE_PLATFORM, default="0")
-    device_id = models.CharField(max_length=100, default="0")
+    user_type = models.CharField(max_length=2, default="0")
     pic_profile = models.ImageField(upload_to='pic_profile/%Y/%m/%d/',blank=True, null=True,)
     def __str__(self):
        return '%s-%s' % (self.first_name, self.last_name)
@@ -107,133 +96,151 @@ class User(AbstractUser):
 
 
 
-class AnaFirma(models.Model):
-    anafirma_adi    = models.CharField(max_length=80)
+class Company(models.Model):
+    user_company = models.OneToOneField(User, related_name="user_company", on_delete=models.PROTECT, primary_key=True)    
+    name    = models.CharField(max_length=80)
     def __str__(self):
-       return self.anafirma_adi
+       return self.name
 
 
-class Firma(models.Model):
-    user = models.OneToOneField(User, on_delete=models.PROTECT, primary_key=True)
-    firma_adi = models.CharField(max_length=80)
-    anafirma = models.ForeignKey(AnaFirma, null=True,blank=True, on_delete=models.PROTECT)
+class Restaurant(models.Model):
+    user_restaurant = models.OneToOneField(User, related_name="user_restaurant", on_delete=models.PROTECT, primary_key=True)
+    name = models.CharField(max_length=80)
+    company = models.ForeignKey(Company, null=True,blank=True, on_delete=models.PROTECT)
     tel_no = models.CharField(max_length=10, default="")
-    pin = models.CharField(max_length=6, default="")
+    second_tel = models.CharField(max_length=10, default="")
     allow_self_delivery = models.BooleanField(blank=False, default=False)
-    kayitli_motorcular = ArrayField(models.IntegerField(), blank=True, null=True)
-    adres = models.TextField()
-    mahalle = models.CharField(max_length=80)
-    ilce = models.CharField(max_length=80)
-    il = models.CharField(max_length=80)
-    enlem = models.DecimalField(max_digits=16, decimal_places=12, default="0.0")
-    boylam = models.DecimalField(max_digits=16, decimal_places=12, default="0.0")
-    belge_1 = models.ImageField(upload_to='belge_1/%Y/%m/%d/',blank=True, null=True,)
-    belge_2 = models.ImageField(upload_to='belge_2/%Y/%m/%d/',blank=True, null=True,)
-    belge_3 = models.ImageField(upload_to='belge_3/%Y/%m/%d/',blank=True, null=True,)
-    belge_4 = models.ImageField(upload_to='belge_4/%Y/%m/%d/',blank=True, null=True,)
-    belge_5 = models.ImageField(upload_to='belge_5/%Y/%m/%d/',blank=True, null=True,)
-    belge_6 = models.ImageField(upload_to='belge_6/%Y/%m/%d/',blank=True, null=True,)
-    belge_7 = models.ImageField(upload_to='belge_7/%Y/%m/%d/',blank=True, null=True,)
-    belge_8 = models.ImageField(upload_to='belge_8/%Y/%m/%d/',blank=True, null=True,)
+    registered_couriers = models.ManyToManyField('Courier')
+    adress = models.TextField()
+    district = models.CharField(max_length=80)
+    town = models.CharField(max_length=80)
+    city = models.CharField(max_length=80)
+    latitude = models.DecimalField(max_digits=16, decimal_places=12, default="0.0")
+    longitude = models.DecimalField(max_digits=16, decimal_places=12, default="0.0")
+    doc_1 = models.ImageField(upload_to='belge_1/%Y/%m/%d/',blank=True, null=True,)
+    doc_2 = models.ImageField(upload_to='belge_2/%Y/%m/%d/',blank=True, null=True,)
+    doc_3 = models.ImageField(upload_to='belge_3/%Y/%m/%d/',blank=True, null=True,)
+    doc_4 = models.ImageField(upload_to='belge_4/%Y/%m/%d/',blank=True, null=True,)
+    doc_5 = models.ImageField(upload_to='belge_5/%Y/%m/%d/',blank=True, null=True,)
+    doc_6 = models.ImageField(upload_to='belge_6/%Y/%m/%d/',blank=True, null=True,)
+    doc_7 = models.ImageField(upload_to='belge_7/%Y/%m/%d/',blank=True, null=True,)
+    doc_8 = models.ImageField(upload_to='belge_8/%Y/%m/%d/',blank=True, null=True,)
     def __str__(self):
-       return self.firma_adi
+       return str(self.user_restaurant)
 
 
 
-class Teslimat(models.Model):
-    kurye = models.ForeignKey(User, related_name='teslimat',  on_delete=models.PROTECT)
-    firma = models.ForeignKey(Firma, related_name='teslimat_firma', on_delete=models.PROTECT)
-    onay = models.BooleanField(default=False)
-    adet = models.PositiveIntegerField(default=0)
-    gecerli_adet = models.PositiveIntegerField(default=0)
+class Delivery(models.Model):
+    courier = models.ForeignKey('Courier', related_name='courier',  on_delete=models.PROTECT)
+    restaurant = models.ForeignKey(Restaurant, related_name='restaurant', on_delete=models.PROTECT)
+    confirm = models.BooleanField(default=False)
+    count = models.PositiveIntegerField(default=0)
+    active_count = models.PositiveIntegerField(default=0)
     sos = models.BooleanField(default=False)
-    sos_sebep = models.CharField(max_length=2, default="0")
-    sos_sonuc = models.CharField(max_length=2, default="0")
-    zaman = models.DateTimeField(auto_now=True)
+    sos_reason = models.CharField(max_length=2, default="0")
+    sos_result = models.CharField(max_length=2, default="0")
+    self_delivery = models.BooleanField(default=False)    
+    timestamp = models.DateTimeField(auto_now=True)
     def __str__(self):
-       return self.kurye.username
+       return str(self.restaurant)
 
 
-"""
-@receiver(post_save, sender=Teslimat)
+@receiver(pre_save, sender=Delivery)
 def delivery_create_update(sender, instance, **kwargs):
-    User=get_user_model()
-    user = User.objects.get(pk=instance.kurye.id)
+    courier = instance.courier
     print("delivery_create_update")
-    print(user)
-    print(user.device_id)
-    device, created = APNSDevice.objects.get_or_create(
-                                registration_id=user.device_id
-                                #defaults={'user': user}
-                                )
-    print("after created")
-    
-    msg={"title" : "Game Request", "body" : "Bob wants to play poker"}
-    extra={"delivery_id": instance.id}
-    print(msg)
-    device.send_message(message=msg, sound="default", category="ID_CATEGORY_DELIVERY", extra=extra)
-"""
+    print(courier.device_id)
+    if not instance.self_delivery:
+        try:
+            status_old = sender.objects.get(pk=instance.pk)
+            # send push notification fot updated delivery if courier changes
+            if not (instance.courier == status_old.courier): 
+                device, created = APNSDevice.objects.get_or_create(
+                                            registration_id=courier.device_id,
+                                            defaults={'user': courier.user_courier}
+                                            )
+                print("sender -teslimat - exists")
+                msg={"title" : "Update", "body" : "Bob updates delivery details"}
+                extra={"delivery_id": instance.id}
+                print(msg)
+                device.send_message(message=msg, sound="default", category="ID_CATEGORY_DELIVERY", extra=extra)
 
-
-@receiver(pre_save, sender=Teslimat)
-def delivery_create_update(sender, instance, **kwargs):
-    User=get_user_model()
-    user_id = instance.kurye.id
-    print(user_id)
-    user = User.objects.get(pk=user_id)
-    print("delivery_create_update")
-    print(user.device_id)
-    try:
-        status_old = sender.objects.get(pk=instance.pk)
-        # send push notification fot updated delivery if courier changes
-        if not (instance.kurye == status_old.kurye): 
+        except sender.DoesNotExist:
+            # send push-notif for new delivery
             device, created = APNSDevice.objects.get_or_create(
-                                        registration_id=user.device_id,
-                                        defaults={'user': user}
+                                        registration_id=courier.device_id,
+                                        defaults={'user': courier.user_courier}
                                         )
-            print("sender -teslimat - exists")
-            msg={"title" : "Update", "body" : "Bob updates delivery details"}
+            print("sender - teslimat - doesnot exist")
+            msg={"title" : "New delivery", "body" : "Bob wants new delivery"}
             extra={"delivery_id": instance.id}
             print(msg)
             device.send_message(message=msg, sound="default", category="ID_CATEGORY_DELIVERY", extra=extra)
 
 
-    except sender.DoesNotExist:
-        # send push-notif for new delivery
-        device, created = APNSDevice.objects.get_or_create(
-                                    registration_id=user.device_id,
-                                    defaults={'user': user}
-                                    )
-        print("sender - teslimat - doesnot exist")
-        msg={"title" : "New delivery", "body" : "Bob wants new delivery"}
-        extra={"delivery_id": instance.pk}
-        print(msg)
-        device.send_message(message=msg, sound="default", category="ID_CATEGORY_DELIVERY", extra=extra)
 
 
 
-
-class IslemTeslimat(models.Model):
-    teslimat = models.ForeignKey(Teslimat, related_name='teslimat', on_delete=models.PROTECT)
-    islem_tipi = models.CharField(max_length=2, default="0")
-    tam_isim = models.CharField(max_length=60, default="")
+class Order(models.Model):
+    delivery = models.ForeignKey(Delivery, related_name='order_delivery', on_delete=models.PROTECT)
+    process_type = models.CharField(max_length=2, default="0")
+    full_name = models.CharField(max_length=60, default="")
     tel_no = models.CharField(max_length=10, default="")
     address = models.CharField(max_length=200)
-    enlem = models.DecimalField(max_digits=16, decimal_places=12, default="0.0")
-    boylam = models.DecimalField(max_digits=16, decimal_places=12, default="0.0")
-    teslim_edilmedi_sebep = models.CharField(max_length=2, default="0")
-    odeme_alinmadi_sebep = models.CharField(max_length=2, default="0")
-    sos_sebep = models.CharField(max_length=2, default="0")
-    sos_sonuc = models.CharField(max_length=2, default="0")
-    zaman = models.DateTimeField(auto_now=True)
+    latitude = models.DecimalField(max_digits=16, decimal_places=12, default="0.0")
+    longitude = models.DecimalField(max_digits=16, decimal_places=12, default="0.0")
+    non_delivery_reason = models.CharField(max_length=2, default="0")
+    non_payment_reason = models.CharField(max_length=2, default="0")
+    timestamp = models.DateTimeField(auto_now=True)
     def __str__(self):
-        return self.teslimat.kurye.username
+        return self.full_name
+
+
+class Courier(models.Model):
+    user_courier = models.OneToOneField(User, related_name="user_courier", on_delete=models.PROTECT, primary_key=True)
+    state = models.CharField(max_length=2, default="0")
+    active_restaurant = models.ForeignKey(Restaurant, related_name="active_restaurant", blank=True, null=True,  on_delete=models.CASCADE)
+    active_delivery = models.ForeignKey(Delivery, related_name="active_delivery", blank=True, null=True,  on_delete=models.CASCADE)
+    active_order = models.ForeignKey(Order, related_name="active_order",  blank=True, null=True, on_delete=models.CASCADE)
+    queue = models.IntegerField(default=0)
+    latitude = models.DecimalField(max_digits=16, decimal_places=12, default="0.0")
+    longitude = models.DecimalField(max_digits=16, decimal_places=12, default="0.0")
+    active_worker = models.BooleanField(default=True)
+    tel_no = models.CharField(max_length=10, default="")
+    pin = models.CharField(max_length=6, default="")
+    registered_restaurants = models.ManyToManyField(Restaurant)
+    device_platform = models.CharField(max_length=1, choices=DEVICE_PLATFORM, default="0")
+    device_id = models.CharField(max_length=100, default="0")
+
+    def __str__(self):
+        return str(self.user_courier.username)
 
 
 
 
-class Bildirim(models.Model):
-    tipi = models.CharField(max_length=2, default="0")
+"""
+@receiver(pre_save, sender=Kurye)
+def status_change(sender, instance, **kwargs):
+    try:
+        status_old = sender.objects.get(pk=instance.pk)
+        if (instance.durum == "3") & ((status_old.durum != instance.durum) | (status_old.sira != instance.sira)) : 
+            order_obj = {"type": "location_response", 
+                        "courier_status": instance.durum, 
+                        "queue_order": instance.sira
+                        }
+            async_to_sync(location_response(order_obj))
+
+    except sender.DoesNotExist:
+        print("sender does not exist")
+"""
+
+
+
+
+
+
+class Notification(models.Model):
+    notif_type = models.CharField(max_length=2, default="0")
     receiver =  models.ForeignKey(User, related_name='receiver', on_delete=models.PROTECT)
     sender = models.ForeignKey(User, related_name='sender', on_delete=models.PROTECT)
     message = models.TextField(blank=True, null=True)
@@ -244,84 +251,79 @@ class Bildirim(models.Model):
 
 
 
-class Bahsis(models.Model):
-    user = models.ForeignKey(User, related_name='bahsis', on_delete=models.PROTECT)
-    zaman = models.DateTimeField(auto_now=True)
-    miktar = models.DecimalField(max_digits=6, decimal_places=2,)
+class Tip(models.Model):
+    courier = models.ForeignKey(Courier, related_name='tip_courier', on_delete=models.PROTECT)
+    timestamp = models.DateTimeField(auto_now=True)
+    amount = models.DecimalField(max_digits=6, decimal_places=2,)
     def __str__(self):
-       return self.user
+       return self.tip_courier
 
 
-class ArtiMotorcu(models.Model):
-    user = models.ForeignKey(User, related_name='artimotorcu', on_delete=models.PROTECT)
-    max_motorcu = models.PositiveIntegerField(default=0)
-    gecen_motorcu_adedi = models.PositiveIntegerField(default=0)
-    zaman = models.DateTimeField(auto_now=True)    
+class ExtraCourier(models.Model):
+    courier = models.ForeignKey(Courier, related_name='extracourier_courier', on_delete=models.PROTECT)
+    max_courier = models.PositiveIntegerField(default=0)
+    amount_extra_courier = models.PositiveIntegerField(default=0)
+    timestamp = models.DateTimeField(auto_now=True)    
     def __str__(self):
-       return self.user
+       return self.courier
 
 
-class FaturaDetay(models.Model):
-    user = models.ForeignKey(User, related_name='faturadetay', on_delete=models.PROTECT)
-    yil = models.PositiveIntegerField(default=0)
-    ay = models.PositiveIntegerField(default=0)
-    max_motorcu = models.PositiveIntegerField(default=0)
-    standart_ek = models.BooleanField(blank=True) 
-    ek_kisi = models.PositiveIntegerField(default=0)
-    ek_toplam = models.PositiveIntegerField(default=0) 
-    standart_tutar = models.PositiveIntegerField(default=0) 
-    ek_tutar = models.PositiveIntegerField(default=0) 
+class InvoiceDetail(models.Model):
+    restaurant = models.ForeignKey(Restaurant, related_name='invoicedetail_restaurant', on_delete=models.PROTECT)
+    year = models.PositiveIntegerField(default=0)
+    month = models.PositiveIntegerField(default=0)
+    max_courier = models.PositiveIntegerField(default=0)
+    standard_addition = models.BooleanField(blank=True, null=True) 
+    added_person = models.PositiveIntegerField(default=0)
+    added_total = models.PositiveIntegerField(default=0) 
+    standard_amount = models.PositiveIntegerField(default=0) 
+    added_amount = models.PositiveIntegerField(default=0) 
     def __str__(self):
-        return '%s-%s-%s' % (self.user, self.yil, self.ay)
+        return '%s-%s-%s' % (self.restaurant, self.year, self.month)
 
 
-class FaturaToplam(models.Model):
-    user = models.ForeignKey(User, related_name='faturatoplam', on_delete=models.PROTECT)
-    yil = models.PositiveIntegerField(default=0)
-    ay = models.PositiveIntegerField(default=0)
-    odendi = models.BooleanField(blank=True) 
-    tutar = models.PositiveIntegerField(default=0) 
+class InvoiceTotal(models.Model):
+    restaurant = models.ForeignKey(Restaurant, related_name='invoicetotal_restaurant', on_delete=models.PROTECT)
+    year = models.PositiveIntegerField(default=0)
+    month = models.PositiveIntegerField(default=0)
+    paid = models.BooleanField(blank=True) 
+    amount = models.PositiveIntegerField(default=0) 
     def __str__(self):
-        return '%s-%s-%s' % (self.user, self.yil, self.ay)
+        return '%s-%s-%s' % (self.restaurant, self.year, self.month)
 
 
 
-class Fiyat(models.Model):
-    max_motorcu = models.PositiveIntegerField(default=0)
-    fiyat = models.PositiveIntegerField(default=0)
+class StandardPrice(models.Model):
+    max_courier = models.PositiveIntegerField(default=0)
+    price = models.PositiveIntegerField(default=0)
     def __str__(self):
-        return '%s-%s' % (self.max_motorcu, self.fiyat)
+        return '%s-%s' % (self.max_courier, self.price)
 
 
-class EkFiyat(models.Model):
-    max_motorcu = models.ForeignKey(Fiyat, related_name='ek_fiyat', on_delete=models.PROTECT)    
-    ek_motorcu = models.PositiveIntegerField(default=0)
-    fiyat = models.PositiveIntegerField(default=0)
+class AddedPrice(models.Model):
+    standard_price = models.ForeignKey(StandardPrice, related_name='addedprice_standardprice', on_delete=models.PROTECT)    
+    extra_courier = models.PositiveIntegerField(default=0)
+    price = models.PositiveIntegerField(default=0)
     def __str__(self):
-        return '%s-%s-%s' % (self.max_motorcu, self.ek_motorcu,self.fiyat)
+        return '%s-%s-%s' % (self.standard_price, self.extra_courier, self.price)
 
 
-class Il(models.Model):
-    il = models.CharField(max_length=80, default="İstanbul")
+class City(models.Model):
+    name = models.CharField(max_length=80, default="İstanbul")
     def __str__(self):
-        return '%s' % (self.il)
+        return '%s' % (self.name)
 
-class Ilce(models.Model):
-    il = models.ForeignKey(Il, related_name='ilce_il', on_delete=models.PROTECT)    
-    ilce = models.CharField(max_length=80, default="Kadıköy")
+class Town(models.Model):
+    city = models.ForeignKey(City, related_name='ilce_il', on_delete=models.PROTECT)    
+    name = models.CharField(max_length=80, default="Kadıköy")
     def __str__(self):
-        return '%s-%s' % (self.il, self.ilce)
+        return '%s-%s' % (self.city, self.name)
 
-class Mahalle(models.Model):
-    ilce = models.ForeignKey(Ilce, related_name='mahalle_ilce', on_delete=models.PROTECT)    
-    mahalle = models.CharField(max_length=80, default="Fenerbahçe")
+class District(models.Model):
+    Town = models.ForeignKey(Town, related_name='mahalle_ilce', on_delete=models.PROTECT)    
+    name = models.CharField(max_length=80, default="Fenerbahçe")
     def __str__(self):
-        return '%s-%s-%s' % (self.ilce.il, self.ilce, self.mahalle)
-
-
-class WSClient(models.Model):
-    user = models.ForeignKey(User, related_name='wsclient', on_delete=models.CASCADE)
-    channel_name = models.CharField(max_length=200, default="")
+        return '%s-%s-%s' % (self.Town.City, self.Town, self.name)
 
 
 
