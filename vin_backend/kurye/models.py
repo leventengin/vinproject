@@ -111,7 +111,7 @@ class Restaurant(models.Model):
     tel_no = models.CharField(max_length=10, default="")
     second_tel = models.CharField(max_length=10, default="")
     allow_self_delivery = models.BooleanField(blank=False, default=False)
-    registered_couriers = models.ManyToManyField('Courier')
+    registered_couriers = models.ManyToManyField('Courier', blank=True, null=True)
     adress = models.TextField()
     district = models.CharField(max_length=80)
     town = models.CharField(max_length=80)
@@ -209,7 +209,7 @@ class Courier(models.Model):
     active_worker = models.BooleanField(default=True)
     tel_no = models.CharField(max_length=10, default="")
     pin = models.CharField(max_length=6, default="")
-    registered_restaurants = models.ManyToManyField(Restaurant)
+    registered_restaurants = models.ManyToManyField(Restaurant, blank=True, null=True)
     device_platform = models.CharField(max_length=1, choices=DEVICE_PLATFORM, default="0")
     device_id = models.CharField(max_length=100, default="0")
 
