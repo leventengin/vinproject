@@ -11,6 +11,8 @@ from rest_framework_simplejwt.views import (
 )
 from django.contrib.auth import views
 from . import views
+from .views import ProfilePictureUploadView, PicProfileUploadView
+
 
 """
 urlpatterns = [
@@ -43,7 +45,9 @@ urlpatterns = [
     url(r'quit_queue', views.quit_queue),
     url(r'end_of_work', views.end_of_work),  
     url(r'sos', views.sos),
-    url(r'sos_cancel', views.sos_cancel),                
+    url(r'sos_cancel', views.sos_cancel),  
+    #url(r'pic_profile', ProfilePictureUploadView.as_view()), 
+    url(r'pic_profile', PicProfileUploadView.as_view()),                
     url(r'record_courier_check', views.record_courier_check),
     url(r'record_courier_accept', views.record_courier_accept),   
     url(r'^token', TokenObtainPairView.as_view(), name='token_obtain_pair'),

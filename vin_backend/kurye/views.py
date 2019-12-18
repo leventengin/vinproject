@@ -3,7 +3,7 @@ from rest_framework import viewsets
 from django.conf import settings
 from .models import User, Company, Restaurant, Delivery, Order, Courier
 from .serializers import UserSerializer, CompanySerializer, RestaurantSerializer, CourierSerializer
-from .serializers import DeliverySerializer, OrderSerializer
+from .serializers import DeliverySerializer, OrderSerializer, ProfilePictureSerializer
 from django.contrib.auth import get_user_model
 from django.middleware.csrf import get_token
 from rest_framework.authtoken.models import Token
@@ -40,6 +40,14 @@ from django.urls import reverse
 import json 
 from .restlist import siraya_gir, siradan_cik, get_rest_list, calculate_distance
 from django_user_agents.utils import get_user_agent
+from rest_framework.parsers import FileUploadParser
+from rest_framework.views import APIView
+from rest_framework import status
+from django.core.files.images import ImageFile
+
+
+
+
 
 
 
@@ -48,6 +56,19 @@ def _pw(length=10):
     for i in range(length):
         s += random.choice(string.ascii_letters + string.digits)
     return s
+
+
+
+class ProfilePictureUploadView(APIView):
+    parser_class = (FileUploadParser,)
+    def post(self, request, *args, **kwargs):
+        file_serializer = ProfilePictureSerializer(data=request.data)
+        if  file_serializer.is_valid():
+            file_serializer.save()
+            return Response(file_serializer.data, status=status.HTTP_201_CREATED)
+        else:
+            return Response(file_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 
 
@@ -260,6 +281,58 @@ def courier_get_self_data(request):
                     },
                     status=HTTP_200_OK)
 
+
+
+
+
+
+class PicProfileUploadView(APIView):
+    parser_class = (FileUploadParser,)
+
+    def post(self, request, format=None):
+        if 'file' not in request.data:
+            return Response({'success': False,
+                        'message': 'Dosya yüklü değil',
+                        'response' : {
+                        }},
+                        status=HTTP_400_BAD_REQUEST)
+
+        f = request.data['file']
+        print(f.name)
+        user = request.user
+        if user.is_active is False:
+            return Response({'success': False,
+                            'message': 'Kullanıcı aktif değil',
+                            'response' : {
+                            }},
+                            status=HTTP_400_BAD_REQUEST)
+
+        kurye = Courier.objects.get(user_courier=user)
+
+        print(request.get_host())
+
+        if kurye.active_worker is False:
+            return Response({'success': False,
+                            'message': 'Kullanıcı aktif değil',
+                            'response' : {
+                            }},
+                            status=HTTP_400_BAD_REQUEST)
+
+        user.pic_profile.save(f.name, f, save=True)
+        print(user.pic_profile.url)
+        full_path = request.get_host()+user.pic_profile.url
+        print(full_path)
+
+        user.pic_profile_abs_url = request.build_absolute_uri(user.pic_profile.url)
+        user.save()
+
+        kurye = Courier.objects.get(user_courier=user)
+        serializer = CourierSerializer(kurye)
+        return Response({'success': True,
+                        'message': 'Başarılı yükleme',
+                        'response': serializer.data                
+                        },
+                        status=HTTP_200_OK)
 
 
 

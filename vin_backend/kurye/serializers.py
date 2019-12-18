@@ -7,19 +7,7 @@ from django.contrib.auth import get_user_model
 
 
 
-"""
-class TrackSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Track
-        fields = ['order', 'title', 'duration']
 
-class AlbumSerializer(serializers.ModelSerializer):
-    tracks = TrackSerializer(many=True, read_only=True)
-
-    class Meta:
-        model = Album
-        fields = ['album_name', 'artist', 'tracks']
-"""
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
@@ -32,7 +20,9 @@ class UserSerializer(serializers.ModelSerializer):
                 'email', 
                 'user_type', 
                 'pic_profile',
+                'pic_profile_abs_url',
                 ]
+ 
 
 
 
@@ -102,6 +92,16 @@ class CourierSerializer(serializers.ModelSerializer):
                     'device_id',
                     'registered_restaurants'
                 ]        
+
+
+class ProfilePictureSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = get_user_model()
+        fields = [
+                'username',
+                'pic_profile',
+                ]
+
 
 
 
