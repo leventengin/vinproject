@@ -82,7 +82,8 @@ class CourierSerializer(serializers.ModelSerializer):
     user_type = serializers.SerializerMethodField()
     pic_profile = serializers.SerializerMethodField()
     pic_profile_abs_url = serializers.SerializerMethodField()
-
+    latitude = serializers.DecimalField(max_digits=16, decimal_places=12, coerce_to_string=False)
+    longitude = serializers.DecimalField(max_digits=16, decimal_places=12,  coerce_to_string=False)
     class Meta:
         model = Courier
         fields = [  

@@ -205,7 +205,7 @@ class Courier(models.Model):
     active_order = models.ForeignKey(Order, related_name="active_order",  blank=True, null=True, on_delete=models.CASCADE)
     queue = models.IntegerField(default=0)
     latitude = models.DecimalField(max_digits=16, decimal_places=12, default="0.0")
-    longitude = models.DecimalField(max_digits=16, decimal_places=12, default="0.0")
+    longitude = models.DecimalField(max_digits=16, decimal_places=12,  default="0.0")
     worker_active = models.BooleanField(default=True)
     tel_no = models.CharField(max_length=10, default="")
     pin = models.CharField(max_length=6, default="")
