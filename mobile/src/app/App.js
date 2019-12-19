@@ -27,8 +27,8 @@ export default function App() {
           //var lat = 40.970894;
           //var lon = 29.056185;
           // CKM
-          var lat = 40.968820;
-          var lon = 29.060562;
+          var lat = 40.998820;
+          var lon = 29.087562;
           var lat_new = lat + y;
           var lon_new = lon + y;
           var msg = {
@@ -99,7 +99,7 @@ export default function App() {
       function error(err) {
         console.warn(`ERROR(${err.code}): ${err.message}`);
       }
-
+      /*
       async function get_geo(){
         await navigator.geolocation.getCurrentPosition(success, error, options);
       }
@@ -111,15 +111,15 @@ export default function App() {
         console.log("yes geolocation");
         //get_geo();
       }
-
-      const token = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ0b2tlbl90eXBlIjoicmVmcmVzaCIsImV4cCI6MTU3Njc2MjEzNCwianRpIjoiY2RmZDRiYTFkNGVkNDg4ZmFmNWE1ZTAwZGQzNTg3MjEiLCJ1c2VyX2lkIjoyfQ.OjfRSQTE_e12yGu2gnUUe69GcPh2e7kv_hxaxxs6yRc";
-      let newToken = retrieveToken(token)
+      */
+      const newToken = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ0b2tlbl90eXBlIjoicmVmcmVzaCIsImV4cCI6MTYwODI3NDA3MCwianRpIjoiNzJkYmE0NjM1M2YwNGY5YThlZTViMmJkMTkxYTZmNDAiLCJ1c2VyX2lkIjoyfQ.ranvRWxIVrxm49JuiUpd2cAcpFDi4U-xRenMHqi0o7U";
+      //let newToken = retrieveToken(token)
       //const newToken = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNTc0OTQ3NzkxLCJqdGkiOiIwNWM4MjhjZTUzMjY0YmRhYjY5YWIxYjJmNmNmZDMxMiIsInVzZXJfaWQiOjJ9.dtFi9MB71ug3OvUb04NTA6GFQPnjVuRSkSFovsqNLSU";
       console.log(newToken);
-      let endpoint = `${WS_BASE_URL}kurye`
-      //let endpoint = "ws://127.0.0.1:8000/kurye/"
+      //let endpoint = `${WS_BASE_URL}kurye`
+      let endpoint = "ws://127.0.0.1:8000/kurye/"
       // Create new WebSocket
-      let ws = new WebSocket(endpoint + "?token=" + token)
+      let ws = new WebSocket(endpoint + "?token=" + newToken)
 
       console.log("state of ws-1 ");
       console.log(ws.readyState);
@@ -149,16 +149,15 @@ export default function App() {
 
 
     return (
-        <AuthContext.Provider value={token}>
+
             <Router history={hist}>
                 <Switch>
-                    { (token == "") && <Route path="/auth" component={AuthLayout} />}
                     <Route path="/rtl" component={RtlLayout} />
                     <Route path="/auth" component={AuthLayout} />
                     <Route path="/admin" component={AdminLayout} />
                     <Redirect from="/" to="/admin/dashboard" />
                 </Switch>
             </Router>
-        </AuthContext.Provider>
+
     )
 }

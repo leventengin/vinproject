@@ -130,7 +130,7 @@ def pin_login(request):
                          }},
                          status=HTTP_400_BAD_REQUEST)
 
-    if kurye.active_worker is False:
+    if kurye.worker_active is False:
         return Response({'success': False,
                          'message': 'Hesap kapalı',
                          'response' : {
@@ -265,7 +265,7 @@ def courier_get_self_data(request):
 
     kurye = Courier.objects.get(user_courier=user)
     print(kurye)
-    if kurye.active_worker is False:
+    if kurye.worker_active is False:
         return Response({'success': False,
                          'message': 'Kullanıcı aktif değil',
                          'response' : {
@@ -276,8 +276,8 @@ def courier_get_self_data(request):
     serializer = CourierSerializer(kurye)
 
     return Response({'success': True,
-                    'message': 'Başarılı login',
-                    'response': serializer.data                
+                    'message': 'Başarılı',
+                    'response': {'courier': serializer.data }               
                     },
                     status=HTTP_200_OK)
 
@@ -311,7 +311,7 @@ class PicProfileUploadView(APIView):
 
         print(request.get_host())
 
-        if kurye.active_worker is False:
+        if kurye.worker_active is False:
             return Response({'success': False,
                             'message': 'Kullanıcı aktif değil',
                             'response' : {
@@ -330,7 +330,7 @@ class PicProfileUploadView(APIView):
         serializer = CourierSerializer(kurye)
         return Response({'success': True,
                         'message': 'Başarılı yükleme',
-                        'response': serializer.data                
+                        'response': {'courier': serializer.data }                 
                         },
                         status=HTTP_200_OK)
 
@@ -365,7 +365,7 @@ def start_working(request):
 
     kurye = Courier.objects.get(user_courier=user)
     print(kurye)
-    if kurye.active_worker is False:
+    if kurye.worker_active is False:
         return Response({'success': False,
                          'message': 'Kullanıcı aktif değil',
                          'response' : {
@@ -415,7 +415,7 @@ def select_restaurant(request):
 
     kurye = Courier.objects.get(user_courier=user)
     print(kurye)
-    if kurye.active_worker is False:
+    if kurye.worker_active is False:
         return Response({'success': False,
                          'message': 'Kullanıcı aktif değil',
                          'response' : {
@@ -437,7 +437,7 @@ def select_restaurant(request):
 
     return Response({'success': True,
                     'message': 'Restoran seçildi',
-                    'response': serializer.data                
+                    'response': {'courier': serializer.data }                
                     },
                     status=HTTP_200_OK)
 
@@ -471,7 +471,7 @@ def get_delivery(request):
 
     kurye = Courier.objects.get(user_courier=user)
     print(kurye)
-    if kurye.active_worker is False:
+    if kurye.worker_active is False:
         return Response({'success': False,
                          'message': 'Kullanıcı aktif değil',
                          'response' : {
@@ -485,7 +485,7 @@ def get_delivery(request):
 
     return Response({'success': True,
                     'message': 'Başarıyla kaydedildi',
-                    'response': serializer.data                
+                    'response': { 'delivery': serializer.data }               
                     },
                     status=HTTP_200_OK)
 
@@ -521,7 +521,7 @@ def update_device(request):
 
     kurye = Courier.objects.get(user_courier=user)
     print(kurye)
-    if kurye.active_worker is False:
+    if kurye.worker_active is False:
         return Response({'success': False,
                          'message': 'Kullanıcı aktif değil',
                          'response' : {
@@ -538,7 +538,7 @@ def update_device(request):
 
     return Response({'success': True,
                     'message': 'Başarıyla kaydedildi',
-                    'response': serializer.data                
+                    'response': {'courier': serializer.data }                
                     },
                     status=HTTP_200_OK)
 
@@ -974,7 +974,7 @@ def create_delivery(request):
 
     kurye = Courier.objects.get(user_courier=user)
     print(kurye)
-    if kurye.active_worker is False:
+    if kurye.worker_active is False:
         return Response({'success': False,
                          'message': 'Kullanıcı aktif değil',
                          'response' : {
@@ -1057,7 +1057,7 @@ def update_delivery(request):
 
     kurye = Courier.objects.get(user_courier=user)
     print(kurye)
-    if kurye.active_worker is False:
+    if kurye.worker_active is False:
         return Response({'success': False,
                          'message': 'Kullanıcı aktif değil',
                          'response' : {
@@ -1141,7 +1141,7 @@ def delivery_approve_reject(request):
                          status=HTTP_400_BAD_REQUEST)
 
     kurye = Courier.objects.get(user_courier=user)
-    if kurye.active_worker is False:
+    if kurye.worker_active is False:
         return Response({'success': False,
                          'message': 'Kullanıcı aktif değil',
                          'response' : {
@@ -1161,7 +1161,7 @@ def delivery_approve_reject(request):
 
 
     order_obj = Order.objects.filter(delivery=delivery_obj)
-    if not islem_obj:
+    if not order_obj:
         return Response({'success': False,
                          'message': 'Teslimat sipariş kaydı yok',
                          'response' : {
@@ -1222,7 +1222,7 @@ def create_self_delivery(request):
 
     kurye = Courier.objects.get(user_courier=user)
     print(kurye)
-    if kurye.active_worker is False:
+    if kurye.worker_active is False:
         return Response({'success': False,
                          'message': 'Kullanıcı aktif değil',
                          'response' : {
@@ -1270,13 +1270,6 @@ def create_self_delivery(request):
 
 
 
-    serializer = DeliverySerializer(delivery_obj)
-
-    return Response({'success': True,
-                    'message': 'Başarıyla kaydedildi',
-                    'response': {"delivery":serializer.data                
-                    }},
-                    status=HTTP_200_OK)
 
 
 
@@ -1317,7 +1310,7 @@ def delivery_process(request):
                          status=HTTP_400_BAD_REQUEST)
 
     kurye = Courier.objects.get(user_courier=user)
-    if kurye.active_worker is False:
+    if kurye.worker_active is False:
         return Response({'success': False,
                          'message': 'Kullanıcı aktif değil',
                          'response' : {
@@ -1438,7 +1431,7 @@ def quit_queue(request):
                          status=HTTP_400_BAD_REQUEST)
 
     kurye = Courier.objects.get(user_courier=user)
-    if kurye.active_worker is False:
+    if kurye.worker_active is False:
         return Response({'success': False,
                          'message': 'Kullanıcı aktif değil',
                          'response' : {
@@ -1461,11 +1454,10 @@ def quit_queue(request):
 
 
     serializer = CourierSerializer(kurye)
-    response =  serializer.data
-
+ 
     return Response({'success': True,
                      'message': 'Başarılı',
-                     'response' : response
+                     'response' : {'courier': serializer.data }    
                     },
                     status=HTTP_200_OK)
 
@@ -1487,7 +1479,7 @@ def enter_queue(request):
                          status=HTTP_400_BAD_REQUEST)
 
     kurye = Courier.objects.get(user_courier=user)
-    if kurye.active_worker is False:
+    if kurye.worker_active is False:
         return Response({'success': False,
                          'message': 'Kullanıcı aktif değil',
                          'response' : {
@@ -1512,11 +1504,10 @@ def enter_queue(request):
 
 
     serializer = CourierSerializer(kurye)
-    response =  serializer.data
 
     return Response({'success': True,
                      'message': 'Başarılı',
-                     'response' : response
+                     'response' : {'courier': serializer.data }    
                     },
                     status=HTTP_200_OK)
 
@@ -1538,7 +1529,7 @@ def end_of_work(request):
                          status=HTTP_400_BAD_REQUEST)
 
     kurye = Courier.objects.get(user_courier=user)
-    if kurye.active_worker is False:
+    if kurye.worker_active is False:
         return Response({'success': False,
                          'message': 'Kullanıcı aktif değil',
                          'response' : {
@@ -1562,11 +1553,10 @@ def end_of_work(request):
 
 
     serializer = CourierSerializer(kurye)
-    response =  serializer.data
 
     return Response({'success': True,
                      'message': 'Başarılı',
-                     'response' : response
+                     'response' : {'courier': serializer.data }    
                     },
                     status=HTTP_200_OK)
 
@@ -1596,7 +1586,7 @@ def sos(request):
                          status=HTTP_400_BAD_REQUEST)
 
     kurye = Courier.objects.get(user_courier=user)
-    if kurye.active_worker is False:
+    if kurye.worker_active is False:
         return Response({'success': False,
                          'message': 'Kullanıcı aktif değil',
                          'response' : {
@@ -1628,11 +1618,10 @@ def sos(request):
 
 
     serializer = CourierSerializer(kurye)
-    response =  serializer.data
 
     return Response({'success': True,
-                     'message': 'Başarılı',
-                     'response' : response
+                     'message': 'SOS gerçekleşti',
+                     'response' : {'courier': serializer.data }    
                     },
                     status=HTTP_200_OK)
 
@@ -1664,7 +1653,7 @@ def sos_cancel(request):
 
     kurye = Courier.objects.get(user_courier=user)
 
-    if kurye.active_worker is False:
+    if kurye.worker_active is False:
         return Response({'success': False,
                          'message': 'Kullanıcı aktif değil',
                          'response' : {
@@ -1695,13 +1684,13 @@ def sos_cancel(request):
 
 
     serializer = CourierSerializer(kurye)
-    response =  serializer.data
 
     return Response({'success': True,
                      'message': 'Başarılı',
-                     'response' : response
+                     'response' : {'courier': serializer.data }    
                     },
                     status=HTTP_200_OK)
+
 
 
 

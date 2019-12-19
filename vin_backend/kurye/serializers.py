@@ -74,11 +74,26 @@ class CourierSerializer(serializers.ModelSerializer):
     active_restaurant = RestaurantSerializer(read_only=True)
     active_delivery = DeliverySerializer(read_only=True)
     active_order = OrderSerializer(read_only=True)
-    user_courier = UserSerializer(read_only=True)
+    #user_courier = UserSerializer(read_only=True)
+    username = serializers.SerializerMethodField()
+    first_name = serializers.SerializerMethodField()
+    last_name = serializers.SerializerMethodField()
+    email = serializers.SerializerMethodField()
+    user_type = serializers.SerializerMethodField()
+    pic_profile = serializers.SerializerMethodField()
+    pic_profile_abs_url = serializers.SerializerMethodField()
+
     class Meta:
         model = Courier
         fields = [  
-                    'user_courier', 
+                    'pk', 
+                    'username',
+                    'first_name', 
+                    'last_name', 
+                    'email', 
+                    'user_type', 
+                    'pic_profile',
+                    'pic_profile_abs_url',
                     'state', 
                     'queue', 
                     'latitude', 
@@ -86,12 +101,28 @@ class CourierSerializer(serializers.ModelSerializer):
                     'active_restaurant',
                     'active_delivery',
                     'active_order',
-                    'active_worker',
+                    'worker_active',
                     'tel_no',
                     'device_platform',
                     'device_id',
                     'registered_restaurants'
                 ]        
+    def get_username(self,obj):
+        return obj.user_courier.username
+    def get_first_name(self,obj):
+        return obj.user_courier.first_name
+    def get_last_name(self,obj):
+        return obj.user_courier.last_name       
+    def get_email(self,obj):
+        return obj.user_courier.email
+    def get_user_type(self,obj):
+        return obj.user_courier.user_type
+    def get_pic_profile(self,obj):
+        return obj.user_courier.pic_profile.url
+    def get_pic_profile_abs_url(self,obj):
+        return obj.user_courier.pic_profile_abs_url
+
+
 
 
 class ProfilePictureSerializer(serializers.ModelSerializer):

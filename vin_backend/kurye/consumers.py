@@ -21,19 +21,20 @@ class KuryeConsumer(AsyncWebsocketConsumer):
             await self.close()
         else:
             print("not anonymous")
+            db_obj = await self._create_channel(user, self.channel_name)
             await self.accept()
 
 
     async def disconnect(self, close_code):
         print("-------------close---------")
+        db_obj = await self._delete_channel(user)        
         await self.close()
+
 
 
     async def receive(self, text_data):
         text_data_json = json.loads(text_data)
         type = text_data_json['type']
-        #channel_layer = get_channel_layer()
-        #channel_name = self.channel_name
         user = self.scope['user']
         if type == "send_location":
             latitude = Decimal(text_data_json['latitude'])
@@ -42,18 +43,18 @@ class KuryeConsumer(AsyncWebsocketConsumer):
             print(latitude)
             print(longitude)
             print(user)
-            #self._update_location(latitude, longitude, user,id)
             db_obj = await self._update_location(latitude, longitude, user.id)
-            #print("updated location")
-            #print(db_obj)
         return None
 
 
 
-    async def location_response(self, order_obj):
-        #order_obj = _get_order()
-        await self.send(order_obj)
+
+
+    async def location_response(self, queue_message, user):
+        channel_name = await self.get_channel_name(user)
+        await self.channel_layer.send(channel_name, queue_message)
         return None
+
 
 
     @database_sync_to_async
@@ -63,20 +64,54 @@ class KuryeConsumer(AsyncWebsocketConsumer):
         #user = request.user
         #print(user)
         User = get_user_model()
-        kurye = Courier.objects.get(user_id=user_id)
-        print("user inside update location", user)
-        if kurye.durum == "1"  and kurye.active_restaurant:
+        user = User.objects.get(pk=user_id)
+        kurye = Courier.objects.get(user_courier_id=user_id)
+        print("kurye inside update location", kurye)
+        print("kurye.state", kurye.state)
+
+        if kurye.state == "1" or kurye.state == "0":
+            pass
+        
+        elif kurye.state == "2" or kurye.state == "4" or kurye.state == "5":
+            kurye.latitude = latitude
+            kurye.longitude = longitude
+            kurye.save()
+
+        elif kurye.state == "3":
             restoran_obj = kurye.active_restaurant       
             distance = calculate_distance(latitude, longitude, restoran_obj.latitude, restoran_obj.longitude )
-            print("-------")
+            print("distance")
             print(distance)
-            if (distance < 20):
-                kurye.state = "3"
-                kurye.queue = siraya_gir(restoran_obj.id)
-        kurye.latitude = latitude
-        kurye.longitude = longitude
-        kurye.save()
+            if (distance < 100):
+                kurye.state = "1"
+                kurye.queue = siraya_gir(restoran_obj.pk)
+            kurye.latitude = latitude
+            kurye.longitude = longitude
+            kurye.save()
+
         return None
+
+
+
+    @database_sync_to_async
+    def _create_channel(self, user, channel_name):
+        print("create channel")
+        print(user)
+        WSClients.objects.create(user=user, channel_name=channel_name)
+        return None
+
+    @database_sync_to_async
+    def _delete_channel(self, user):
+        print("delete channel")
+        print(user)
+        WSClients.objects.filter(user=user).delete()
+        return None
+
+    @database_sync_to_async
+    def get_channel_name(self, user):
+        channel_name = WSClient.objects.filter(user=user).last()
+        return channel_name
+
 
 
 

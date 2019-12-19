@@ -11,7 +11,7 @@ from push_notifications.models import APNSDevice, GCMDevice
 from channels.db import database_sync_to_async
 from asgiref.sync import async_to_sync
 #from .consumers import location_response 
-
+from channels.layers import get_channel_layer
 
 
 
@@ -111,7 +111,7 @@ class Restaurant(models.Model):
     tel_no = models.CharField(max_length=10, default="")
     second_tel = models.CharField(max_length=10, default="")
     allow_self_delivery = models.BooleanField(blank=False, default=False)
-    registered_couriers = models.ManyToManyField('Courier', blank=True, null=True)
+    registered_couriers = models.ManyToManyField('Courier', blank=True)
     adress = models.TextField()
     district = models.CharField(max_length=80)
     town = models.CharField(max_length=80)
@@ -206,10 +206,10 @@ class Courier(models.Model):
     queue = models.IntegerField(default=0)
     latitude = models.DecimalField(max_digits=16, decimal_places=12, default="0.0")
     longitude = models.DecimalField(max_digits=16, decimal_places=12, default="0.0")
-    active_worker = models.BooleanField(default=True)
+    worker_active = models.BooleanField(default=True)
     tel_no = models.CharField(max_length=10, default="")
     pin = models.CharField(max_length=6, default="")
-    registered_restaurants = models.ManyToManyField(Restaurant, blank=True, null=True)
+    registered_restaurants = models.ManyToManyField(Restaurant, blank=True)
     device_platform = models.CharField(max_length=1, choices=DEVICE_PLATFORM, default="0")
     device_id = models.CharField(max_length=100, default="0")
 
@@ -218,22 +218,45 @@ class Courier(models.Model):
 
 
 
-
-"""
-@receiver(pre_save, sender=Kurye)
-def status_change(sender, instance, **kwargs):
+@receiver(pre_save, sender=Courier)
+def courier_queue_change(sender, instance, **kwargs):
+    print("courier queue change")
+    
     try:
         status_old = sender.objects.get(pk=instance.pk)
-        if (instance.durum == "3") & ((status_old.durum != instance.durum) | (status_old.sira != instance.sira)) : 
-            order_obj = {"type": "location_response", 
-                        "courier_status": instance.durum, 
-                        "queue_order": instance.sira
-                        }
-            async_to_sync(location_response(order_obj))
+        # ws message if status changed from 3-serviste to 1-sırada
+        if  (status_old.state == "3") and (instance.state == "1"): 
+            queue_message = {"type": "location_response", 
+                            "courier_status": instance.state, 
+                            "queue_order": instance.queue
+                            }
+            channel_layer = get_channel_layer()       
+            channel_name = WSClients.objects.filter(user=instance.user_courier).last()
+            async_to_sync(channel_layer.send)(channel_name, queue_message)
+            #async_to_sync(location_response(queue_message, instance.user_courier))    
+
+        # ws message if status is 1-sırada  and queue changed
+        if  (status_old.state == "1") and (instance.state == "1") and (status_old.queue != instance.queue): 
+            queue_message = {"type": "location_response", 
+                             "courier_status": instance.state, 
+                             "queue_order": instance.queue
+                            }
+            channel_layer = get_channel_layer()       
+            channel_name = WSClients.objects.filter(user=instance.user_courier).last()
+            async_to_sync(channel_layer.send)(channel_name, queue_message)                            
+            #async_to_sync(location_response(order_obj, instance.user_courier))           
 
     except sender.DoesNotExist:
-        print("sender does not exist")
-"""
+        print("sender - courier does not exist")
+
+
+
+
+class WSClients(models.Model):
+    user =  models.ForeignKey(User, related_name='wsclients', on_delete=models.PROTECT)
+    channel_name = models.CharField(max_length=100, default="")
+    def __str__(self):
+        return '%s-%s' % (self.user, self.channel_name)
 
 
 
