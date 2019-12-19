@@ -118,9 +118,15 @@ class CourierSerializer(serializers.ModelSerializer):
     def get_user_type(self,obj):
         return obj.user_courier.user_type
     def get_pic_profile(self,obj):
-        return obj.user_courier.pic_profile.url
+        if obj.user_courier.pic_profile:
+            return obj.user_courier.pic_profile.url
+        else:
+            return None
     def get_pic_profile_abs_url(self,obj):
-        return obj.user_courier.pic_profile_abs_url
+        if obj.user_courier.pic_profile:
+            return obj.user_courier.pic_profile_abs_url
+        else:        
+            return None
 
 
 
