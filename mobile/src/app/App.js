@@ -126,6 +126,7 @@ export default function App() {
 
       ws.onmessage = function (event) {
           console.log(event.data);
+          console.log("ON MESSAGE");
         }
 
 

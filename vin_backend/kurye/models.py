@@ -10,7 +10,6 @@ from django.contrib.auth import get_user_model
 from push_notifications.models import APNSDevice, GCMDevice
 from channels.db import database_sync_to_async
 from asgiref.sync import async_to_sync
-#from .consumers import location_response 
 from channels.layers import get_channel_layer
 
 
@@ -226,25 +225,33 @@ def courier_queue_change(sender, instance, **kwargs):
         status_old = sender.objects.get(pk=instance.pk)
         # ws message if status changed from 3-serviste to 1-sırada
         if  (status_old.state == "3") and (instance.state == "1"): 
-            queue_message = {"type": "location_response", 
-                            "courier_status": instance.state, 
-                            "queue_order": instance.queue
+            queue_message = {"type": "state_queue_change", 
+                            "state": instance.state, 
+                            "queue": instance.queue
                             }
             channel_layer = get_channel_layer()       
-            channel_name = WSClients.objects.filter(user=instance.user_courier).last()
+            channel_obj = WSClients.objects.filter(user=instance.user_courier).last()
+            channel_name = channel_obj.channel_name
+            print("3>>1")
+            print(channel_layer)
+            print(channel_name)
             async_to_sync(channel_layer.send)(channel_name, queue_message)
-            #async_to_sync(location_response(queue_message, instance.user_courier))    
+            print("message has been send")
 
         # ws message if status is 1-sırada  and queue changed
         if  (status_old.state == "1") and (instance.state == "1") and (status_old.queue != instance.queue): 
-            queue_message = {"type": "location_response", 
-                             "courier_status": instance.state, 
-                             "queue_order": instance.queue
+            queue_message = {"type": "state_queue_change", 
+                             "state": instance.state, 
+                             "queue": instance.queue
                             }
-            channel_layer = get_channel_layer()       
-            channel_name = WSClients.objects.filter(user=instance.user_courier).last()
+            channel_layer = get_channel_layer()   
+            channel_obj = WSClients.objects.filter(user=instance.user_courier).last()
+            channel_name = channel_obj.channel_name
+            print("1>>1  queue change")
+            print(channel_layer)
+            print(channel_name)                
             async_to_sync(channel_layer.send)(channel_name, queue_message)                            
-            #async_to_sync(location_response(order_obj, instance.user_courier))           
+ 
 
     except sender.DoesNotExist:
         print("sender - courier does not exist")

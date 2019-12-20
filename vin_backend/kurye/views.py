@@ -108,9 +108,9 @@ def pin_login(request):
     if not pin:
         return Response({'success': False,
                          'message': 'Pin girilmemiş',
-                         'response' : {
-                         }},
-                         status=HTTP_400_BAD_REQUEST)
+                         'response' : None,
+                        },
+                        status=HTTP_400_BAD_REQUEST)
     
     User=get_user_model()
 
@@ -119,23 +119,23 @@ def pin_login(request):
     except:
         return Response({'success': False,
                          'message': 'Pin tanımlı değil',
-                         'response' : {
-                         }},
-                         status=HTTP_400_BAD_REQUEST)
+                         'response' : None,
+                        },
+                        status=HTTP_400_BAD_REQUEST)
 
     if kurye.user_courier.is_active is False:
         return Response({'success': False,
                          'message': 'Kullanıcı aktif değil',
-                         'response' : {
-                         }},
-                         status=HTTP_400_BAD_REQUEST)
+                         'response' : None,
+                        },
+                        status=HTTP_400_BAD_REQUEST)
 
     if kurye.worker_active is False:
         return Response({'success': False,
                          'message': 'Hesap kapalı',
-                         'response' : {
-                         }},
-                         status=HTTP_400_BAD_REQUEST)
+                         'response' : None,
+                        },
+                        status=HTTP_400_BAD_REQUEST)
     
     new_password = _pw()
     #print("new password", new_password)
@@ -258,9 +258,9 @@ def courier_get_self_data(request):
     if user.is_active is False:
         return Response({'success': False,
                          'message': 'Kullanıcı aktif değil',
-                         'response' : {
-                         }},
-                         status=HTTP_400_BAD_REQUEST)
+                         'response' : None,
+                        },
+                        status=HTTP_400_BAD_REQUEST)
 
 
     kurye = Courier.objects.get(user_courier=user)
@@ -268,9 +268,9 @@ def courier_get_self_data(request):
     if kurye.worker_active is False:
         return Response({'success': False,
                          'message': 'Kullanıcı aktif değil',
-                         'response' : {
-                         }},
-                         status=HTTP_400_BAD_REQUEST)
+                         'response' : None,
+                        },
+                        status=HTTP_400_BAD_REQUEST)
 
   
     serializer = CourierSerializer(kurye)
@@ -293,8 +293,8 @@ class PicProfileUploadView(APIView):
         if 'file' not in request.data:
             return Response({'success': False,
                         'message': 'Dosya yüklü değil',
-                        'response' : {
-                        }},
+                        'response' : None,
+                        },
                         status=HTTP_400_BAD_REQUEST)
 
         f = request.data['file']
@@ -303,8 +303,8 @@ class PicProfileUploadView(APIView):
         if user.is_active is False:
             return Response({'success': False,
                             'message': 'Kullanıcı aktif değil',
-                            'response' : {
-                            }},
+                            'response' : None,
+                            },
                             status=HTTP_400_BAD_REQUEST)
 
         kurye = Courier.objects.get(user_courier=user)
@@ -314,8 +314,8 @@ class PicProfileUploadView(APIView):
         if kurye.worker_active is False:
             return Response({'success': False,
                             'message': 'Kullanıcı aktif değil',
-                            'response' : {
-                            }},
+                            'response' : None,
+                            },
                             status=HTTP_400_BAD_REQUEST)
 
         user.pic_profile.save(f.name, f, save=True)
@@ -350,27 +350,27 @@ def start_working(request):
     if not latitude or not longitude:
         return Response({'success': False,
                          'message': 'Eksik bilgi gönderildi',
-                         'response' : {
-                         }},
-                         status=HTTP_400_BAD_REQUEST)
+                         'response' : None,
+                        },
+                        status=HTTP_400_BAD_REQUEST)
 
     user = request.user
 
     if user.is_active is False:
         return Response({'success': False,
                          'message': 'Kulanıcı aktif değil',
-                         'response' : {
-                         }},
-                         status=HTTP_400_BAD_REQUEST)
+                         'response' : None,
+                        },
+                        status=HTTP_400_BAD_REQUEST)
 
     kurye = Courier.objects.get(user_courier=user)
     print(kurye)
     if kurye.worker_active is False:
         return Response({'success': False,
                          'message': 'Kullanıcı aktif değil',
-                         'response' : {
-                         }},
-                         status=HTTP_400_BAD_REQUEST)
+                         'response' : None,
+                        },
+                        status=HTTP_400_BAD_REQUEST)
 
 
     # en yakındaki restoranları listele, yoksa boş dön
@@ -399,9 +399,9 @@ def select_restaurant(request):
     if not rest_id:
         return Response({'success': False,
                          'message': 'Eksik bilgi gönderildi',
-                         'response' : {
-                         }},
-                         status=HTTP_400_BAD_REQUEST)
+                         'response' : None,
+                        },
+                        status=HTTP_400_BAD_REQUEST)
 
 
     user = request.user
@@ -409,18 +409,18 @@ def select_restaurant(request):
     if user.is_active is False:
         return Response({'success': False,
                          'message': 'Kullanıcı aktif değil',
-                         'response' : {
-                         }},
-                         status=HTTP_400_BAD_REQUEST)
+                         'response' : None,
+                        },
+                        status=HTTP_400_BAD_REQUEST)
 
     kurye = Courier.objects.get(user_courier=user)
     print(kurye)
     if kurye.worker_active is False:
         return Response({'success': False,
                          'message': 'Kullanıcı aktif değil',
-                         'response' : {
-                         }},
-                         status=HTTP_400_BAD_REQUEST)
+                         'response' : None,
+                        },
+                        status=HTTP_400_BAD_REQUEST)
 
 
     rest_obj = Restaurant.objects.filter(user_restaurant_id=rest_id).first()
@@ -455,9 +455,9 @@ def get_delivery(request):
     if not delivery_id:
         return Response({'success': False,
                          'message': 'Eksik bilgi gönderildi',
-                         'response' : {
-                         }},
-                         status=HTTP_400_BAD_REQUEST)
+                         'response' : None,
+                        },
+                        status=HTTP_400_BAD_REQUEST)
 
 
     user = request.user
@@ -465,18 +465,18 @@ def get_delivery(request):
     if user.is_active is False:
         return Response({'success': False,
                          'message': 'Kullanıcı aktif değil',
-                         'response' : {
-                         }},
-                         status=HTTP_400_BAD_REQUEST)
+                         'response' : None,
+                        },
+                        status=HTTP_400_BAD_REQUEST)
 
     kurye = Courier.objects.get(user_courier=user)
     print(kurye)
     if kurye.worker_active is False:
         return Response({'success': False,
                          'message': 'Kullanıcı aktif değil',
-                         'response' : {
-                         }},
-                         status=HTTP_400_BAD_REQUEST)
+                         'response' : None,
+                        },
+                        status=HTTP_400_BAD_REQUEST)
 
 
 
@@ -505,9 +505,9 @@ def update_device(request):
     if not device_id  or  not device_platform:
         return Response({'success': False,
                          'message': 'Eksik bilgi gönderildi',
-                         'response' : {
-                         }},
-                         status=HTTP_400_BAD_REQUEST)
+                         'response' : None,
+                        },
+                        status=HTTP_400_BAD_REQUEST)
 
 
     user = request.user
@@ -515,18 +515,18 @@ def update_device(request):
     if user.is_active is False:
         return Response({'success': False,
                          'message': 'Kullanıcı aktif değil',
-                         'response' : {
-                         }},
-                         status=HTTP_400_BAD_REQUEST)
+                         'response' : None,
+                        },
+                        status=HTTP_400_BAD_REQUEST)
 
     kurye = Courier.objects.get(user_courier=user)
     print(kurye)
     if kurye.worker_active is False:
         return Response({'success': False,
                          'message': 'Kullanıcı aktif değil',
-                         'response' : {
-                         }},
-                         status=HTTP_400_BAD_REQUEST)
+                         'response' : None,
+                        },
+                        status=HTTP_400_BAD_REQUEST)
 
 
 
@@ -959,27 +959,27 @@ def create_delivery(request):
     if not address_list or not count  or not courier_id or not restaurant_id:
         return Response({'success': False,
                          'message': 'Eksik bilgi gönderildi',
-                         'response' : {
-                         }},
-                         status=HTTP_400_BAD_REQUEST)
+                         'response' : None,
+                        },
+                        status=HTTP_400_BAD_REQUEST)
 
     user = request.user
 
     if user.is_active is False:
         return Response({'success': False,
                          'message': 'Kulanıcı aktif değil',
-                         'response' : {
-                         }},
-                         status=HTTP_400_BAD_REQUEST)
+                         'response' : None,
+                        },
+                        status=HTTP_400_BAD_REQUEST)
 
     kurye = Courier.objects.get(user_courier=user)
     print(kurye)
     if kurye.worker_active is False:
         return Response({'success': False,
                          'message': 'Kullanıcı aktif değil',
-                         'response' : {
-                         }},
-                         status=HTTP_400_BAD_REQUEST)
+                         'response' : None,
+                        },
+                        status=HTTP_400_BAD_REQUEST)
 
 
     # not: restorandan gelen bilgilere göre yeni bir teslimat ve ilişkili işlemler yarat 
@@ -1042,27 +1042,27 @@ def update_delivery(request):
     if not delivery_id or not address_list or not count  or not courier_id or not restaurant_id:
         return Response({'success': False,
                          'message': 'Eksik bilgi gönderildi',
-                         'response' : {
-                         }},
-                         status=HTTP_400_BAD_REQUEST)
+                         'response' : None,
+                        },
+                        status=HTTP_400_BAD_REQUEST)
 
     user = request.user
 
     if user.is_active is False:
         return Response({'success': False,
                          'message': 'Kulanıcı aktif değil',
-                         'response' : {
-                         }},
-                         status=HTTP_400_BAD_REQUEST)
+                         'response' : None,
+                        },
+                        status=HTTP_400_BAD_REQUEST)
 
     kurye = Courier.objects.get(user_courier=user)
     print(kurye)
     if kurye.worker_active is False:
         return Response({'success': False,
                          'message': 'Kullanıcı aktif değil',
-                         'response' : {
-                         }},
-                         status=HTTP_400_BAD_REQUEST)
+                         'response' : None,
+                        },
+                        status=HTTP_400_BAD_REQUEST)
 
 
     # not: restorandan gelen bilgilere göre teslimat ve işlemleri düzenle(update) 
@@ -1071,9 +1071,9 @@ def update_delivery(request):
     if not delivery_obj:
         return Response({'success': False,
                          'message': 'Teslimat kaydı yok',
-                         'response' : {
-                         }},
-                         status=HTTP_400_BAD_REQUEST)
+                         'response' : None,
+                        },
+                        status=HTTP_400_BAD_REQUEST)
 
 
     delivery_obj.restaurant_id = restaurant_id
@@ -1127,26 +1127,26 @@ def delivery_approve_reject(request):
     if not delivery_id or not state:
         return Response({'success': False,
                          'message': 'Eksik bilgi gönderildi',
-                         'response' : {
-                         }},
-                         status=HTTP_400_BAD_REQUEST)
+                         'response' : None,
+                        },
+                        status=HTTP_400_BAD_REQUEST)
 
     user = request.user
 
     if user.is_active is False:
         return Response({'success': False,
                          'message': 'Kulanıcı aktif değil',
-                         'response' : {
-                         }},
-                         status=HTTP_400_BAD_REQUEST)
+                         'response' : None,
+                        },
+                        status=HTTP_400_BAD_REQUEST)
 
     kurye = Courier.objects.get(user_courier=user)
     if kurye.worker_active is False:
         return Response({'success': False,
                          'message': 'Kullanıcı aktif değil',
-                         'response' : {
-                         }},
-                         status=HTTP_400_BAD_REQUEST)
+                         'response' : None,
+                        },
+                        status=HTTP_400_BAD_REQUEST)
 
 
     # not: id'ye göre teslimat ve işlem bilgilerini al 
@@ -1155,18 +1155,18 @@ def delivery_approve_reject(request):
     if not delivery_obj:
         return Response({'success': False,
                          'message': 'Teslimat kaydı yok',
-                         'response' : {
-                         }},
-                         status=HTTP_400_BAD_REQUEST)
+                         'response' : None,
+                        },
+                        status=HTTP_400_BAD_REQUEST)
 
 
     order_obj = Order.objects.filter(delivery=delivery_obj)
     if not order_obj:
         return Response({'success': False,
                          'message': 'Teslimat sipariş kaydı yok',
-                         'response' : {
-                         }},
-                         status=HTTP_400_BAD_REQUEST)
+                         'response' : None,
+                        },
+                        status=HTTP_400_BAD_REQUEST)
 
     if state == 0:
         pass
@@ -1207,27 +1207,27 @@ def create_self_delivery(request):
     if  not count  or not courier_id or not restaurant_id:
         return Response({'success': False,
                          'message': 'Eksik bilgi gönderildi',
-                         'response' : {
-                         }},
-                         status=HTTP_400_BAD_REQUEST)
+                         'response' : None,
+                        },
+                        status=HTTP_400_BAD_REQUEST)
 
     user = request.user
 
     if user.is_active is False:
         return Response({'success': False,
                          'message': 'Kulanıcı aktif değil',
-                         'response' : {
-                         }},
-                         status=HTTP_400_BAD_REQUEST)
+                         'response' : None,
+                        },
+                        status=HTTP_400_BAD_REQUEST)
 
     kurye = Courier.objects.get(user_courier=user)
     print(kurye)
     if kurye.worker_active is False:
         return Response({'success': False,
                          'message': 'Kullanıcı aktif değil',
-                         'response' : {
-                         }},
-                         status=HTTP_400_BAD_REQUEST)
+                         'response' : None,
+                        },
+                        status=HTTP_400_BAD_REQUEST)
 
 
     # not: restorandan gelen bilgilere göre yeni bir teslimat ve ilişkili işlemler yarat 
@@ -1296,9 +1296,9 @@ def delivery_process(request):
     if not delivery_id or not process_type:
         return Response({'success': False,
                          'message': 'Eksik bilgi gönderildi',
-                         'response' : {
-                         }},
-                         status=HTTP_400_BAD_REQUEST)
+                         'response' : None,
+                        },
+                        status=HTTP_400_BAD_REQUEST)
 
     user = request.user
 
@@ -1313,9 +1313,9 @@ def delivery_process(request):
     if kurye.worker_active is False:
         return Response({'success': False,
                          'message': 'Kullanıcı aktif değil',
-                         'response' : {
-                         }},
-                         status=HTTP_400_BAD_REQUEST)
+                         'response' : None,
+                        },
+                        status=HTTP_400_BAD_REQUEST)
 
 
     # not: id'ye göre teslimat ve işlem bilgilerini al 
@@ -1324,9 +1324,9 @@ def delivery_process(request):
     if not delivery_obj:
         return Response({'success': False,
                          'message': 'Teslimat kaydı yok',
-                         'response' : {
-                         }},
-                         status=HTTP_400_BAD_REQUEST)
+                         'response' : None,
+                        },
+                        status=HTTP_400_BAD_REQUEST)
 
     
     order_obj = Order.objects.filter(delivery=delivery_obj).filter(delivery_type!="0").order_by('pk').first()
@@ -1334,9 +1334,9 @@ def delivery_process(request):
     if not order_obj:
         return Response({'success': False,
                          'message': 'Teslimat detay kaydı yok',
-                         'response' : {
-                         }},
-                         status=HTTP_400_BAD_REQUEST)
+                         'response' : None,
+                        },
+                        status=HTTP_400_BAD_REQUEST)
     
 
     #
@@ -1399,9 +1399,9 @@ def delivery_process(request):
     else:
         return Response({'success': False,
                          'message': 'İşlem tipi yanlış, kayıt dışı',
-                         'response' : {
-                         }},
-                         status=HTTP_400_BAD_REQUEST)
+                         'response' : None,
+                        },
+                        status=HTTP_400_BAD_REQUEST)
     
 
 
@@ -1426,17 +1426,17 @@ def quit_queue(request):
     if user.is_active is False:
         return Response({'success': False,
                          'message': 'Kulanıcı aktif değil',
-                         'response' : {
-                         }},
-                         status=HTTP_400_BAD_REQUEST)
+                         'response' : None,
+                        },
+                        status=HTTP_400_BAD_REQUEST)
 
     kurye = Courier.objects.get(user_courier=user)
     if kurye.worker_active is False:
         return Response({'success': False,
                          'message': 'Kullanıcı aktif değil',
-                         'response' : {
-                         }},
-                         status=HTTP_400_BAD_REQUEST)
+                         'response' : None,
+                        },
+                        status=HTTP_400_BAD_REQUEST)
 
     # sadece sırada ise sıradan çıkmaya izin ver
     
@@ -1447,9 +1447,9 @@ def quit_queue(request):
     else:
         return Response({'success': False,
                          'message': 'Kurye sırada değil!',
-                         'response' : {
-                         }},
-                         status=HTTP_400_BAD_REQUEST)
+                         'response' : None,
+                        },
+                        status=HTTP_400_BAD_REQUEST)
     
 
 
@@ -1474,17 +1474,17 @@ def enter_queue(request):
     if user.is_active is False:
         return Response({'success': False,
                          'message': 'Kulanıcı aktif değil',
-                         'response' : {
-                         }},
-                         status=HTTP_400_BAD_REQUEST)
+                         'response' : None,
+                        },
+                        status=HTTP_400_BAD_REQUEST)
 
     kurye = Courier.objects.get(user_courier=user)
     if kurye.worker_active is False:
         return Response({'success': False,
                          'message': 'Kullanıcı aktif değil',
-                         'response' : {
-                         }},
-                         status=HTTP_400_BAD_REQUEST)
+                         'response' : None,
+                        },
+                        status=HTTP_400_BAD_REQUEST)
 
 
     # sadece sırada ise sıradan çıkmaya izin ver
@@ -1497,9 +1497,9 @@ def enter_queue(request):
     else:
         return Response({'success': False,
                          'message': 'Kurye sıradan çıkmış değil!',
-                         'response' : {
-                         }},
-                         status=HTTP_400_BAD_REQUEST)
+                         'response' : None,
+                        },
+                        status=HTTP_400_BAD_REQUEST)
     
 
 
@@ -1524,17 +1524,17 @@ def end_of_work(request):
     if user.is_active is False:
         return Response({'success': False,
                          'message': 'Kulanıcı aktif değil',
-                         'response' : {
-                         }},
-                         status=HTTP_400_BAD_REQUEST)
+                         'response' : None,
+                        },
+                        status=HTTP_400_BAD_REQUEST)
 
     kurye = Courier.objects.get(user_courier=user)
     if kurye.worker_active is False:
         return Response({'success': False,
                          'message': 'Kullanıcı aktif değil',
-                         'response' : {
-                         }},
-                         status=HTTP_400_BAD_REQUEST)
+                         'response' : None,
+                        },
+                        status=HTTP_400_BAD_REQUEST)
 
 
     # sadece sırada ise sıradan çıkmaya izin ver
@@ -1546,9 +1546,9 @@ def end_of_work(request):
     else:
         return Response({'success': False,
                          'message': 'Servisteyken iş sonlandırılamaz!',
-                         'response' : {
-                         }},
-                         status=HTTP_400_BAD_REQUEST)
+                         'response' : None,
+                        },
+                        status=HTTP_400_BAD_REQUEST)
     
 
 
@@ -1573,25 +1573,25 @@ def sos(request):
     if not reason:
         return Response({'success': False,
                          'message': 'Eksik bilgi gönderildi',
-                         'response' : {
-                         }},
-                         status=HTTP_400_BAD_REQUEST)
+                         'response' : None,
+                        },
+                        status=HTTP_400_BAD_REQUEST)
                          
     user = request.user
     if user.is_active is False:
         return Response({'success': False,
                          'message': 'Kulanıcı aktif değil',
-                         'response' : {
-                         }},
-                         status=HTTP_400_BAD_REQUEST)
+                         'response' : None
+                        },
+                        status=HTTP_400_BAD_REQUEST)
 
     kurye = Courier.objects.get(user_courier=user)
     if kurye.worker_active is False:
         return Response({'success': False,
                          'message': 'Kullanıcı aktif değil',
-                         'response' : {
-                         }},
-                         status=HTTP_400_BAD_REQUEST)
+                         'response' : None,
+                        },
+                        status=HTTP_400_BAD_REQUEST)
 
 
 
@@ -1611,9 +1611,9 @@ def sos(request):
     else:
         return Response({'success': False,
                          'message': 'Servis dışında SOS gönderilemez!',
-                         'response' : {
-                         }},
-                         status=HTTP_400_BAD_REQUEST)
+                         'response' : None,
+                        },
+                        status=HTTP_400_BAD_REQUEST)
     
 
 
@@ -1639,26 +1639,26 @@ def sos_cancel(request):
     if not result:
         return Response({'success': False,
                          'message': 'Eksik bilgi gönderildi',
-                         'response' : {
-                         }},
-                         status=HTTP_400_BAD_REQUEST)
+                         'response' : None,
+                        },
+                        status=HTTP_400_BAD_REQUEST)
 
     user = request.user
     if user.is_active is False:
         return Response({'success': False,
                          'message': 'Kulanıcı aktif değil',
-                         'response' : {
-                         }},
-                         status=HTTP_400_BAD_REQUEST)
+                         'response' : None,
+                        },
+                        status=HTTP_400_BAD_REQUEST)
 
     kurye = Courier.objects.get(user_courier=user)
 
     if kurye.worker_active is False:
         return Response({'success': False,
                          'message': 'Kullanıcı aktif değil',
-                         'response' : {
-                         }},
-                         status=HTTP_400_BAD_REQUEST)
+                         'response' : None,
+                        },
+                        status=HTTP_400_BAD_REQUEST)
 
 
     # sadece serviste ise SOS göndermeye izin ver
@@ -1676,10 +1676,10 @@ def sos_cancel(request):
 
     else:
         return Response({'success': False,
-                         'message': 'SOS dışında çıkılamaz!',
-                         'response' : {
-                         }},
-                         status=HTTP_400_BAD_REQUEST)
+                         'message': 'SOS durumunda değilsiniz!',
+                         'response' : None,
+                        },
+                        status=HTTP_400_BAD_REQUEST)
     
 
 

@@ -56,7 +56,9 @@ class DeliverySerializer(serializers.ModelSerializer):
     order_delivery = OrderSerializer(many=True, read_only=True)
     class Meta:
         model = Delivery
-        fields = [  'courier', 
+        fields = [  
+                    'pk',
+                    'courier', 
                     'restaurant', 
                     'confirm', 
                     'count', 

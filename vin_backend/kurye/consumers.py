@@ -1,13 +1,12 @@
 from channels.generic.websocket import AsyncWebsocketConsumer
 import json
-#from .models import WSClient
 from channels.db import database_sync_to_async
 from channels.auth import login
 from django.contrib.auth import get_user_model
 from .restlist import calculate_distance, siraya_gir
 from channels.layers import get_channel_layer
 import requests
-from .models import Restaurant, Courier
+from .models import Restaurant, Courier, WSClients
 from decimal import Decimal
 
 
@@ -47,16 +46,19 @@ class KuryeConsumer(AsyncWebsocketConsumer):
         return None
 
 
+    async def state_queue_change(self, event):
+        # Send a message down to the client
+        state = event.get('state', None)
+        queue = event.get('queue', None)
+        print ("state & queue", state, "/", queue)
+        print(event)
+        await self.send(text_data=json.dumps(event))
 
 
 
-    async def location_response(self, queue_message, user):
-        channel_name = await self.get_channel_name(user)
-        await self.channel_layer.send(channel_name, queue_message)
-        return None
 
 
-
+ 
     @database_sync_to_async
     def _update_location(self, latitude, longitude, user_id):
         print("update_location")
@@ -70,7 +72,7 @@ class KuryeConsumer(AsyncWebsocketConsumer):
         print("kurye.state", kurye.state)
 
         if kurye.state == "1" or kurye.state == "0":
-            pass
+            print("kurye state 1 or 0  --- pass")
         
         elif kurye.state == "2" or kurye.state == "4" or kurye.state == "5":
             kurye.latitude = latitude

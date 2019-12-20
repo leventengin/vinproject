@@ -1,6 +1,7 @@
 from django.contrib import admin
 from .models import User, Restaurant, Company, Delivery, Order, Notification, Tip, ExtraCourier
 from .models import InvoiceDetail, InvoiceTotal, StandardPrice, AddedPrice, City, Town, District, Courier
+from .models import WSClients
 from django.contrib.auth.forms import UserChangeForm, UserCreationForm
 from django.contrib.auth.admin import UserAdmin
 from django import forms
@@ -55,4 +56,5 @@ admin.site.register(AddedPrice)
 admin.site.register(City)
 admin.site.register(Town)
 admin.site.register(District)
+admin.site.register(WSClients)
 

@@ -73,6 +73,7 @@ def siraya_gir(rest_id):
     motorcu_obj =  Courier.objects.filter(active_restaurant=rest_id).filter(state="1")
     print(motorcu_obj)
     sira = motorcu_obj.count() + 1
+    print("sira----",sira)
     return sira
 
 
