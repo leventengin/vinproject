@@ -225,7 +225,7 @@ def courier_queue_change(sender, instance, **kwargs):
         status_old = sender.objects.get(pk=instance.pk)
         # ws message if status changed from 3-serviste to 1-sırada
         if  (status_old.state == "3") and (instance.state == "1"): 
-            queue_message = {"type": "state_queue_change", 
+            queue_message = {"type": "state_change", 
                             "state": instance.state, 
                             "queue": instance.queue
                             }
@@ -240,7 +240,7 @@ def courier_queue_change(sender, instance, **kwargs):
 
         # ws message if status is 1-sırada  and queue changed
         if  (status_old.state == "1") and (instance.state == "1") and (status_old.queue != instance.queue): 
-            queue_message = {"type": "state_queue_change", 
+            queue_message = {"type": "queue_change", 
                              "state": instance.state, 
                              "queue": instance.queue
                             }

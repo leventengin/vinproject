@@ -30,7 +30,6 @@ router.register(r'siparis', OrderViewSet, base_name='siparis')
 
 urlpatterns = [
     url(r'courier_get_self_data', views.courier_get_self_data),
-    #url(r'send_location', views.send_location),
     url(r'start_working', views.start_working),
     url(r'select_restaurant', views.select_restaurant),
     url(r'get_delivery', views.get_delivery),  

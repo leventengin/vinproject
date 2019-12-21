@@ -288,7 +288,6 @@ def courier_get_self_data(request):
 
 class PicProfileUploadView(APIView):
     parser_class = (FileUploadParser,)
-
     def post(self, request, format=None):
         if 'file' not in request.data:
             return Response({'success': False,
@@ -538,7 +537,7 @@ def update_device(request):
 
     return Response({'success': True,
                     'message': 'Başarıyla kaydedildi',
-                    'response': {'courier': serializer.data }                
+                    'response': None,              
                     },
                     status=HTTP_200_OK)
 
@@ -1182,11 +1181,11 @@ def delivery_approve_reject(request):
         kurye.save()
 
 
-    serializer = DeliverySerializer(delivery_obj)
+    serializer = CourierSerializer(kurye)
 
     return Response({'success': True,
                     'message': 'Onaylandı',
-                    'response': {"delivery":serializer.data                
+                    'response': {"courier":serializer.data                
                     }},
                     status=HTTP_200_OK)
 
@@ -1198,12 +1197,14 @@ def delivery_approve_reject(request):
 @permission_classes([permissions.IsAuthenticated,])
 def create_self_delivery(request):
     print("-------------create self delivery---------------")
+    # sadece count gelecek ve kurye - serializer dönecek....
+    #--------------------------------------------------------
     count = request.data.get("count")
-    courier_id = request.data.get("courier_id")
-    restaurant_id = request.data.get("restaurant_id")
+    #courier_id = request.data.get("courier_id")
+    #restaurant_id = request.data.get("restaurant_id")
     print(count)
-    print(courier_id)
-    print(restaurant_id)
+    #print(courier_id)
+    #print(restaurant_id)
     if  not count  or not courier_id or not restaurant_id:
         return Response({'success': False,
                          'message': 'Eksik bilgi gönderildi',
@@ -1259,11 +1260,11 @@ def create_self_delivery(request):
     kurye.save()
 
 
-    serializer = DeliverySerializer(delivery_obj)
+    serializer = CourierSerializer(kurye)
 
     return Response({'success': True,
                     'message': 'Onaylandı',
-                    'response': {"delivery":serializer.data                
+                    'response': {"courier":serializer.data                
                     }},
                     status=HTTP_200_OK)
 
@@ -1282,6 +1283,10 @@ def create_self_delivery(request):
 @permission_classes([permissions.IsAuthenticated,])
 def delivery_process(request):
     print("-------------update delivery---------------")
+
+    #  kurye serializer dönecek........................
+
+
     delivery_id = request.data.get("delivery_id")
     process_type = request.data.get("process_type")
     nondelivery_reason = request.data.get("nondelivery_reason")
@@ -1405,11 +1410,11 @@ def delivery_process(request):
     
 
 
-    serializer = OrderSerializer(order_obj)
+    serializer = CourierSerializer(kurye)
 
     return Response({'success': True,
                     'message': 'Onaylandı',
-                    'response': {"order":serializer.data                
+                    'response': {"courier":serializer.data                
                     }},
                     status=HTTP_200_OK)
 

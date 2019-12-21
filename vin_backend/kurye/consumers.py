@@ -46,7 +46,7 @@ class KuryeConsumer(AsyncWebsocketConsumer):
         return None
 
 
-    async def state_queue_change(self, event):
+    async def state_change(self, event):
         # Send a message down to the client
         state = event.get('state', None)
         queue = event.get('queue', None)
@@ -55,7 +55,13 @@ class KuryeConsumer(AsyncWebsocketConsumer):
         await self.send(text_data=json.dumps(event))
 
 
-
+    async def queue_change(self, event):
+        # Send a message down to the client
+        state = event.get('state', None)
+        queue = event.get('queue', None)
+        print ("state & queue", state, "/", queue)
+        print(event)
+        await self.send(text_data=json.dumps(event))
 
 
  
@@ -99,6 +105,7 @@ class KuryeConsumer(AsyncWebsocketConsumer):
     def _create_channel(self, user, channel_name):
         print("create channel")
         print(user)
+        WSClients.objects.filter(user=user).delete()
         WSClients.objects.create(user=user, channel_name=channel_name)
         return None
 
