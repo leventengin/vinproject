@@ -109,12 +109,14 @@ class KuryeConsumer(AsyncWebsocketConsumer):
         WSClients.objects.create(user=user, channel_name=channel_name)
         return None
 
+
     @database_sync_to_async
     def _delete_channel(self, user):
         print("delete channel")
         print(user)
         WSClients.objects.filter(user=user).delete()
         return None
+
 
     @database_sync_to_async
     def get_channel_name(self, user):

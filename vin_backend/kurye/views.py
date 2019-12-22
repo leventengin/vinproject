@@ -1180,6 +1180,9 @@ def delivery_approve_reject(request):
         kurye.active_delivery = delivery_obj
         kurye.save()
 
+        #  diğerlerinin sırası değişmeli....
+        #   ...........................
+
 
     serializer = CourierSerializer(kurye)
 
@@ -1205,7 +1208,7 @@ def create_self_delivery(request):
     print(count)
     #print(courier_id)
     #print(restaurant_id)
-    if  not count  or not courier_id or not restaurant_id:
+    if  not count:
         return Response({'success': False,
                          'message': 'Eksik bilgi gönderildi',
                          'response' : None,
@@ -1230,12 +1233,12 @@ def create_self_delivery(request):
                         },
                         status=HTTP_400_BAD_REQUEST)
 
-
+  
     # not: restorandan gelen bilgilere göre yeni bir teslimat ve ilişkili işlemler yarat 
     print("teslimat yaratma öncesi")
     delivery_obj = Delivery.objects.create( 
-                                        courier_id=courier_id,
-                                        restaurant_id=restaurant_id,
+                                        courier=kurye,
+                                        restaurant=kurye.active_restaurant,
                                         count=count,
                                         active_count=count,
                                         confirm=True,
@@ -1244,7 +1247,7 @@ def create_self_delivery(request):
    
  
     i = 0
-    x = count
+    x = int(count)
     print("len", x)
     while i < x:
         order_obj = Order.objects.create(delivery=delivery_obj,
@@ -1259,6 +1262,7 @@ def create_self_delivery(request):
     kurye.active_delivery = delivery_obj
     kurye.save()
 
+    #  diğelerinin sırası değişmeli ...
 
     serializer = CourierSerializer(kurye)
 
@@ -1457,6 +1461,9 @@ def quit_queue(request):
                         status=HTTP_400_BAD_REQUEST)
     
 
+    #
+    #  burada sıradan çıkma işleminin yapılması lazım 
+    #
 
     serializer = CourierSerializer(kurye)
  
@@ -1507,6 +1514,9 @@ def enter_queue(request):
                         status=HTTP_400_BAD_REQUEST)
     
 
+    #
+    #  burada sıraya girme işleminin yapılması lazım 
+    #
 
     serializer = CourierSerializer(kurye)
 
