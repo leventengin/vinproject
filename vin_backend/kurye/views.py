@@ -1338,11 +1338,11 @@ def delivery_process(request):
                         status=HTTP_400_BAD_REQUEST)
 
     
-    order_obj = Order.objects.filter(delivery=delivery_obj).filter(delivery_type!="0").order_by('pk').first()
+    order_obj = Order.objects.filter(delivery=delivery_obj).filter(process_type=="0").order_by('-pk').first()
 
     if not order_obj:
         return Response({'success': False,
-                         'message': 'Teslimat detay kaydı yok',
+                         'message': 'Teslimat sipariş kaydı yok',
                          'response' : None,
                         },
                         status=HTTP_400_BAD_REQUEST)
@@ -1676,7 +1676,7 @@ def sos_cancel(request):
                         status=HTTP_400_BAD_REQUEST)
 
 
-    # sadece serviste ise SOS göndermeye izin ver
+    # sadece SOS de ise sos_cancel gönder...
     
     if kurye.state == "5":
         print("SOS Cancel")
