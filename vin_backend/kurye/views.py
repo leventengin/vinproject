@@ -1292,17 +1292,17 @@ def delivery_process(request):
 
 
     delivery_id = request.data.get("delivery_id")
-    process_type = request.data.get("process_type")
+    process_type_in = request.data.get("process_type")
     nondelivery_reason = request.data.get("nondelivery_reason")
     nonpayment_reason = request.data.get("nonpayment_reason")
     print(delivery_id)
-    print(process_type)
+    print(process_type_in)
     print(nondelivery_reason)
     print(nonpayment_reason)
 
 
 
-    if not delivery_id or not process_type:
+    if not delivery_id or not process_type_in:
         return Response({'success': False,
                          'message': 'Eksik bilgi gönderildi',
                          'response' : None,
@@ -1338,8 +1338,13 @@ def delivery_process(request):
                         status=HTTP_400_BAD_REQUEST)
 
     
-    order_obj = Order.objects.filter(delivery=delivery_obj).filter(process_type=="0").order_by('-pk').first()
-
+    order_x = Order.objects.filter(delivery=delivery_obj).filter(process_type="0")
+    #order_y = order_x.filter(process_type=="0")
+    print("hepsi:",order_x)
+    for order in order_x:
+        print(order.pk)
+    order_obj = order_x.first()
+    print("ilk olan:",order_obj, order_obj.pk)
     if not order_obj:
         return Response({'success': False,
                          'message': 'Teslimat sipariş kaydı yok',
@@ -1354,9 +1359,9 @@ def delivery_process(request):
     # diğerlerinde ise Teslimat dosyasında kayıtları düzenle
     #
 
-    if process_type == "1":
+    if process_type_in == "1":
         print("case-1")
-        order_obj.process_tipi = process_type
+        order_obj.process_type = process_type_in
         order_obj.save()
         count = delivery_obj.active_count
         count = count -1
@@ -1369,9 +1374,9 @@ def delivery_process(request):
             kurye.state = "3"
             kurye.save()
 
-    elif process_type == "2":
+    elif process_type_in == "2":
         print("case-2")
-        order_obj.process_tipi = process_type
+        order_obj.process_type = process_type_in
         order_obj.non_payment_reason = nonpayment_reason
         order_obj.save()
 
@@ -1387,9 +1392,9 @@ def delivery_process(request):
             kurye.save()
 
 
-    elif process_type == "3":
+    elif process_type_in == "3":
         print("case-3")
-        order_obj.process_tipi = process_type
+        order_obj.process_type = process_type_in
         order_obj.non_delivery_reason = nondelivery_reason
         order_obj.save()
 
