@@ -26,6 +26,7 @@ class KuryeConsumer(AsyncWebsocketConsumer):
 
     async def disconnect(self, close_code):
         print("-------------close---------")
+        user = self.scope['user']
         db_obj = await self._delete_channel(user)        
         await self.close()
 
