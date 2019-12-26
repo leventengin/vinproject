@@ -40,7 +40,7 @@ urlpatterns = [
     url(r'^update_delivery/$', views.update_delivery),
     url(r'^delivery_approve_reject/$', views.delivery_approve_reject),  
     url(r'^delivery_process/$', views.delivery_process),   
-    url(r'^^enter_queue/$', views.enter_queue),                
+    url(r'^enter_queue/$', views.enter_queue),                
     url(r'^quit_queue/$', views.quit_queue),
     url(r'^end_of_work/$', views.end_of_work),  
     url(r'^sos/$', views.sos),
@@ -51,10 +51,8 @@ urlpatterns = [
     url(r'^token/$', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     url(r'^refresh/$', TokenRefreshView.as_view(), name='token_refresh'),
     url(r'^pin_login/$', views.pin_login, name='pin_login'),
-
-
-
-    #url(r'courier_list_details', views.get_courier_list),  
+    url(r'^rest_login/$', views.rest_login, name='rest_login'),    
+    url(r'^rest_get_data/$', views.rest_get_data, name='rest_get_data'),
 
 ]
 

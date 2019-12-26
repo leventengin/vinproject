@@ -145,5 +145,63 @@ class ProfilePictureSerializer(serializers.ModelSerializer):
 
 
 
+class RestSerializer(serializers.ModelSerializer):
+    username = serializers.SerializerMethodField()
+    first_name = serializers.SerializerMethodField()
+    last_name = serializers.SerializerMethodField()
+    email = serializers.SerializerMethodField()
+    user_type = serializers.SerializerMethodField()
+    pic_profile = serializers.SerializerMethodField()
+    pic_profile_abs_url = serializers.SerializerMethodField()
+    latitude = serializers.DecimalField(max_digits=16, decimal_places=12, coerce_to_string=False)
+    longitude = serializers.DecimalField(max_digits=16, decimal_places=12,  coerce_to_string=False)
+    class Meta:
+        model = Restaurant
+        fields = [  
+                    'pk', 
+                    'username',
+                    'first_name', 
+                    'last_name', 
+                    'email', 
+                    'user_type', 
+                    'pic_profile',
+                    'pic_profile_abs_url',
+                    'name', 
+                    'company', 
+                    'tel_no', 
+                    'second_tel', 
+                    'allow_self_delivery',
+                    'registered_couriers',
+                    'active_couriers',
+                    'adress',
+                    'district',
+                    'town',
+                    'city',
+                    'latitude',
+                    'longitude'
+                ]   
+
+    def get_username(self,obj):
+        return obj.user_restaurant.username
+    def get_first_name(self,obj):
+        return obj.user_restaurant.first_name
+    def get_last_name(self,obj):
+        return obj.user_restaurant.last_name       
+    def get_email(self,obj):
+        return obj.user_restaurant.email
+    def get_user_type(self,obj):
+        return obj.user_restaurant.user_type
+    def get_pic_profile(self,obj):
+        if obj.user_restaurant.pic_profile:
+            return obj.user_restaurant.pic_profile.url
+        else:
+            return None
+    def get_pic_profile_abs_url(self,obj):
+        if obj.user_restaurant.pic_profile:
+            return obj.user_restaurant.pic_profile_abs_url
+        else:        
+            return None
+
+
 
 

@@ -4,6 +4,7 @@ from django.conf import settings
 from .models import User, Company, Restaurant, Delivery, Order, Courier
 from .serializers import UserSerializer, CompanySerializer, RestaurantSerializer, CourierSerializer
 from .serializers import DeliverySerializer, OrderSerializer, ProfilePictureSerializer
+from .serializers import RestSerializer
 from django.contrib.auth import get_user_model
 from django.middleware.csrf import get_token
 from rest_framework.authtoken.models import Token
@@ -164,81 +165,114 @@ def pin_login(request):
 @permission_classes([permissions.AllowAny,])
 def rest_login(request):
     print("-------------restorant login---------------")
-    username_or_email = request.data.get("username_or_email").rstrip()
+    username = request.data.get("username").rstrip()
     password = request.data.get("password")
-    print(username_or_email)
+    print(username)
     print(password)
-    if not username_or_email or not password:
+    if not username or not password:
         return Response({'success': False,
                          'message': 'Lütfen kullanıcı adı ve parola giriniz',
-                         'response' : {
-                         }},
-                         status=HTTP_400_BAD_REQUEST)
+                         'response' : None
+                        },
+                        status=HTTP_400_BAD_REQUEST)
     
-    if '@' in username_or_email:
+    if '@' in username:
         pass
     else:
         return Response({'success': False,
                          'message': 'Lütfen eposta hesabı giriniz',
-                         'response' : {
-                         }},
-                         status=HTTP_400_BAD_REQUEST)
-    User=get_user_model()
+                         'response' : None
+                        },
+                        status=HTTP_400_BAD_REQUEST)
 
+    User=get_user_model()
     try:
-        user = User.objects.get(email=username_or_email)
+        user = User.objects.get(username=username)
     except:
         return Response({'success': False,
                          'message': 'Kullanıcı adı hatalı',
-                         'response' : {
-                         }},
-                         status=HTTP_400_BAD_REQUEST)
+                         'response' : None
+                        },
+                        status=HTTP_400_BAD_REQUEST)
 
     check_password = user.check_password(password)
     if not check_password:
         return Response({'success': False,
                          'message': 'Parola hatalı',
-                         'response' : {
-                         }},
-                         status=HTTP_400_BAD_REQUEST)
+                         'response' : None
+                        },
+                        status=HTTP_400_BAD_REQUEST)
 
     if user.is_active is False:
         return Response({'success': False,
                          'message': 'Hesap aktif değil',
-                         'response' : {
-                            'courier_status': ''
-                         }},
-                         status=HTTP_400_BAD_REQUEST)
+                         'response' : None
+                        },
+                        status=HTTP_400_BAD_REQUEST)
 
-    if user.aktif is False:
+
+    restaurant = Restaurant.objects.filter(user_restaurant=user).first()
+
+    if not restaurant:
         return Response({'success': False,
-                         'message': 'Hesap kapalı',
-                         'response' : {
-                            'courier_status': ''
-                         }},
-                         status=HTTP_400_BAD_REQUEST)
+                         'message': 'Restoran tanımlı değil',
+                         'response' : None
+                        },
+                        status=HTTP_400_BAD_REQUEST)        
 
 
-    
-    print("here is pic_profile:", user.pic_profile)
-    if user.pic_profile:
-        pic_profile = BASE_URL + user.pic_profile.url
-    else:
-        pic_profile = ""
+    json_data = {'username':restaurant.user_restaurant.username, 'password': restaurant.user_restaurant.password}
+    print(json_data)
+
+    response_login = requests.post(
+        request.build_absolute_uri(reverse('token_obtain_pair')),
+        data=json_data
+    )
+
+    response_login_dict = json.loads(response_login.content)
+    return Response(response_login_dict, response_login.status_code)
+
+
+
+
+
+
+
+@csrf_exempt
+@api_view(["POST"])
+@permission_classes([permissions.AllowAny,])
+def rest_get_data(request):
+    print("-------------restorant get data ---------------")
+    user = request.user
+
+    if user.is_active is False:
+        return Response({'success': False,
+                         'message': 'Hesap aktif değil',
+                         'response' : None
+                        },
+                        status=HTTP_400_BAD_REQUEST)
+
+
+    restaurant = Restaurant.objects.filter(user_restaurant=user).first()
+
+    if not restaurant:
+        return Response({'success': False,
+                         'message': 'Restoran tanımlı değil',
+                         'response' : None
+                        },
+                        status=HTTP_400_BAD_REQUEST)        
+
+
+    serializer = RestSerializer(restaurant)
+
     return Response({'success': True,
-                    'message': 'Başarılı login',
-                    'response': {
-                        'restaurant':
-                            {
-                                'user_id': user.id, 
-                                'pic_profile': pic_profile, 
-                                'username': user.username, 
-                                'first_name': user.first_name, 
-                                'last_name': user.last_name,  
-                                'email': user.email}, 
-                            }
+                    'message': 'Başarılı oturum açış',
+                    'response': {'restaurant': serializer.data }               
                     },
                     status=HTTP_200_OK)
+
+
+
 
 
 
@@ -1339,7 +1373,7 @@ def delivery_process(request):
 
     
     order_x = Order.objects.filter(delivery=delivery_obj).filter(process_type="0")
-    #order_y = order_x.filter(process_type=="0")
+    #order_y = order_x.filter(process_type="0")
     print("hepsi:",order_x)
     for order in order_x:
         print(order.pk)
@@ -1557,7 +1591,7 @@ def end_of_work(request):
                         status=HTTP_400_BAD_REQUEST)
 
 
-    # sadece sırada ise sıradan çıkmaya izin ver
+    # serviste değilken işi sonlandırmaya izin ver, servisteyken verme...
     
     if kurye.state != "2":
         print("iş bitiş")
