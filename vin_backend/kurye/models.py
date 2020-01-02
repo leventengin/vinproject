@@ -11,6 +11,9 @@ from push_notifications.models import APNSDevice, GCMDevice
 from channels.db import database_sync_to_async
 from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
+# from .restlist import calculate_distance, siraya_gir
+from decimal import Decimal
+import math
 
 
 
@@ -27,9 +30,9 @@ DURUM = (
 
 
 KULLANICI_TIPI = (
-("0", 'Motorcu'),
-("1", 'Firma'),
-("2", 'AnaFirma'),
+("0", 'Kurye'),
+("1", 'Restoran'),
+("2", 'Firma'),
 ("3", 'Merkez')
 )
 
@@ -232,12 +235,13 @@ def courier_queue_change(sender, instance, **kwargs):
                             }
             channel_layer = get_channel_layer()       
             channel_obj = WSClients.objects.filter(user=instance.user_courier).last()
-            channel_name = channel_obj.channel_name
-            print("3>>1")
-            print(channel_layer)
-            print(channel_name)
-            async_to_sync(channel_layer.send)(channel_name, queue_message)
-            print("message has been send")
+            if channel_obj:
+                channel_name = channel_obj.channel_name
+                print("3>>1")
+                print(channel_layer)
+                print(channel_name)
+                async_to_sync(channel_layer.send)(channel_name, queue_message)
+                print("message has been send")
 
         # ws message if status is 1-sırada  and queue changed
         if  (status_old.state == "1") and (instance.state == "1") and (status_old.queue != instance.queue): 
@@ -247,17 +251,87 @@ def courier_queue_change(sender, instance, **kwargs):
                             }
             channel_layer = get_channel_layer()   
             channel_obj = WSClients.objects.filter(user=instance.user_courier).last()
-            channel_name = channel_obj.channel_name
-            print("1>>1  queue change")
-            print(channel_layer)
-            print(channel_name)                
-            async_to_sync(channel_layer.send)(channel_name, queue_message)                            
- 
+            if channel_obj:
+                channel_name = channel_obj.channel_name
+                print("1>>1  queue change")
+                print(channel_layer)
+                print(channel_name)                
+                async_to_sync(channel_layer.send)(channel_name, queue_message)                            
+
+        # ws message if location, queue, state changed
+        if  (status_old.latitude != instance.longitude) or (status_old.longitude != instance.longitude) or (status_old.state != instance.state) or (status_old.queue != instance.queue): 
+            print("REST CHANGE")
+            print(instance.active_restaurant.pk)
+            #-------------------
+            # calculate distance 
+            #--------------------
+            distance = calculate_distance(instance.latitude, instance.longitude, instance.active_restaurant.latitude, instance.active_restaurant.longitude)
+            print("calculated distance between courier and restaurant...:", distance)
+            queue_message = {"type": "rest_change", 
+                             "id": instance.pk,
+                             "state": instance.state, 
+                             "queue": instance.queue,
+                             "latitude": str(instance.latitude),
+                             "longitude": str(instance.longitude),
+                             "tel_no": instance.tel_no,
+                             "active_restaurant": instance.active_restaurant.pk,
+                             "first_name": instance.user_courier.first_name,
+                             "last_name": instance.user_courier.last_name,
+                             "pic_profile": instance.user_courier.pic_profile_abs_url,
+                             "remaining_order": instance.active_delivery.active_count,
+                             "distance": distance
+                             # adı, soyadı, resmi, distance-time, remaining_order eklendi...
+                            }
+            channel_layer = get_channel_layer()  
+            print(instance.active_restaurant)
+
+            channel_obj = WSClients.objects.filter(user=instance.active_restaurant.user_restaurant).last()
+            print("CHANNEL OBJ.................:")
+            print(channel_obj)
+            print(channel_obj.user)
+            print(channel_obj.channel_name)
+
+            if channel_obj:
+                channel_name = channel_obj.channel_name
+                print("rest>>rest change")
+                print(channel_layer)
+                print(channel_name)                
+                async_to_sync(channel_layer.send)(channel_name, queue_message)       
 
     except sender.DoesNotExist:
         print("sender - courier does not exist")
 
 
+
+"""
+@receiver(pre_save, sender=Courier)
+def courier_any_change(sender, instance, **kwargs):
+    print("courier any change")
+    
+    try:
+        # ws message if location, queue, state changed
+        if  (status_old.latitude != instance.longitude) or (status_old.longitude != instance.longitude) or (status_old.state != instance.state) or (status_old.queue != instance.queue): 
+            queue_message = {"type": "rest_change", 
+                             "state": instance.state, 
+                             "queue": instance.queue,
+                             "latitude": instance.latitude,
+                             "longitude": instance.longitude,
+                             "tel_no": instance.tel_no,
+                             "active_restaurant": instance.active_restaurant
+                            }
+            channel_layer = get_channel_layer()   
+            channel_obj = WSClients.objects.filter(user=instance.active_restaurant.user_restaurant).last()
+            if channel_obj:
+                channel_name = channel_obj.channel_name
+                print("any>>any change")
+                print(channel_layer)
+                print(channel_name)                
+                async_to_sync(channel_layer.send)(channel_name, queue_message)                            
+    
+
+    except sender.DoesNotExist:
+        print("sender - courier does not exist")
+"""
 
 
 class WSClients(models.Model):
@@ -359,5 +433,28 @@ class District(models.Model):
 
 
 
+
+def calculate_distance(latitude, longitude, rest_latitude, rest_longitude ):
+    print("longitude", longitude)
+    print("latitude", latitude)
+    print("rest_longitude", rest_longitude)
+    print("rest_latitude", rest_latitude)   
+    # iki lokasyon arasındaki uzaklığı hesapla - HAVERSINE
+    new_latitude = Decimal(latitude)
+    new_longitude = Decimal(longitude)
+
+    R = 6372800  # Earth radius in meters
+    
+    phi1, phi2 = math.radians(new_latitude), math.radians(rest_latitude) 
+    dphi       = math.radians(rest_latitude - new_latitude)
+    dlambda    = math.radians(rest_longitude - new_longitude)
+    
+    a = math.sin(dphi/2)**2 + \
+        math.cos(phi1)*math.cos(phi2)*math.sin(dlambda/2)**2
+    
+    distance = 2*R*math.atan2(math.sqrt(a), math.sqrt(1 - a))
+    print("distance", distance)
+
+    return distance
 
 

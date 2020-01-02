@@ -1,4 +1,4 @@
-import React,  {useState, useEffect} from "react";
+ import React,  {useState, useEffect} from "react";
 import ReactDOM from "react-dom";
 import { createBrowserHistory } from "history";
 import { Router, Route, Switch, Redirect, withRouter } from "react-router-dom";
@@ -26,15 +26,18 @@ export default function App() {
           // Göztepe parkı
           //var lat = 40.970894;
           //var lon = 29.056185;
-          // CKM
-          var lat = 40.998820;
-          var lon = 29.087562;
+          // Archerson
+          //var lat = 40.998820;
+          //var lon = 29.087562;
+
+          var lat = 40.908820;
+          var lon = 29.007562;
           var lat_new = lat + y;
           var lon_new = lon + y;
           var msg = {
               type: "send_location",
-              latitude: lat,
-              longitude:lon,
+              latitude: lat_new,
+              longitude:lon_new,
             };
             console.log(i)
            if (ws.readyState === WebSocket.OPEN) {
@@ -112,7 +115,7 @@ export default function App() {
         //get_geo();
       }
       */
-      const newToken = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ0b2tlbl90eXBlIjoicmVmcmVzaCIsImV4cCI6MTYwODkwMTUzNSwianRpIjoiMzQwMWViNWE0OTgzNGNkNjkzNjEzNWY4Mzk4MzA0MDUiLCJ1c2VyX2lkIjoyfQ.WI-uD5YM0knA_JE_rTFBb7OgNN2XmA8HiTo1kYxI6is";
+      const newToken = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ0b2tlbl90eXBlIjoicmVmcmVzaCIsImV4cCI6MTYwODk3OTAxNiwianRpIjoiMjk1ZDcxNWViYTEzNDhkNzkzNmNjMDY5YmQwZjU0MTAiLCJ1c2VyX2lkIjoyfQ.JBzthjTTTe6F72HV0G_LyeQ9xa4RhQKD_cjFZ1F7Wpw";
       //let newToken = retrieveToken(token)
       //const newToken = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNTc0OTQ3NzkxLCJqdGkiOiIwNWM4MjhjZTUzMjY0YmRhYjY5YWIxYjJmNmNmZDMxMiIsInVzZXJfaWQiOjJ9.dtFi9MB71ug3OvUb04NTA6GFQPnjVuRSkSFovsqNLSU";
       console.log(newToken);

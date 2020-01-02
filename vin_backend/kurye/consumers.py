@@ -1,5 +1,6 @@
 from channels.generic.websocket import AsyncWebsocketConsumer
 import json
+from django.core.serializers.json import DjangoJSONEncoder
 from channels.db import database_sync_to_async
 from channels.auth import login
 from django.contrib.auth import get_user_model
@@ -65,7 +66,8 @@ class KuryeConsumer(AsyncWebsocketConsumer):
         await self.send(text_data=json.dumps(event))
 
 
- 
+
+
     @database_sync_to_async
     def _update_location(self, latitude, longitude, user_id):
         print("update_location")
@@ -119,14 +121,6 @@ class KuryeConsumer(AsyncWebsocketConsumer):
         return None
 
 
-    @database_sync_to_async
-    def get_channel_name(self, user):
-        channel_name = WSClient.objects.filter(user=user).last()
-        return channel_name
-
-
-
-
 
 
 
@@ -140,61 +134,55 @@ class KuryeConsumer(AsyncWebsocketConsumer):
 
 class RestoranConsumer(AsyncWebsocketConsumer):
     async def connect(self):
-        #user = self.scope['user']
         print("----------connect-------------")
         user = self.scope['user']
         print(user)
         if user.is_anonymous:
-            print("anonymous")
+            print("restaurant anonymous")
             await self.close()
         else:
-            print("not anonymous")
+            print("restaurant not anonymous")
+            db_obj = await self._create_rest_channel(user, self.channel_name)
             await self.accept()
 
 
     async def disconnect(self, close_code):
-        print("-------------close---------")
+        print("-------------restaurant close---------")
+        user = self.scope['user']
+        db_obj = await self._delete_rest_channel(user)        
         await self.close()
 
 
-    async def receive(self, text_data):
-        text_data_json = json.loads(text_data)
-        type = text_data_json['type']
-        channel_name = self.channel_name
-
-        if type == "get_couriers":
-            firma_id = int(text_data_json['firma_id'])
-            print(type)
-            print(firma_id)
-            db_obj = _get_courier_list(firma_id)
-            data = {"type": "response_get_couriers",
-                    "courier_list": db_obj,
-            }
-            await channel_layer.send("channel_name", data)
-
-
+    async def rest_change(self, event):
+        # Send a message down to the 
+        print("rest-change")
+        print(event)
+        await self.send(text_data=json.dumps(event))
 
 
     @database_sync_to_async
-    def _get_courier_list(self, firma_id):
-        User=get_user_model()
-        db_obj = {}
-        firma_obj = Firma.objects.filter(id=firma_id).first()
-        couriers = firma_obj.kayitli_motorcular
-        for i in couriers:
-            courier_obj = User.objects.filter(id=i).first()
-            if courier_obj:
-                courier_data = {"id": courier_obj.id,
-                                "name": courier_obj.first_name,
-                                "surname": courier_obj.last_name,
-                                "state": courier_obj.durum,
-                                "latitude": courier_obj.enlem,
-                                "longitude": courier_obj.boylam,
-                                "order": courier_obj.sira,
-                                }
-                db_obj[courier_obj.id] = courier_data
-        
-        return db_obj
+    def _create_rest_channel(self, user, channel_name):
+        print("create restaurant channel")
+        print(user)
+        WSClients.objects.filter(user=user).delete()
+        WSClients.objects.create(user=user, channel_name=channel_name)
+        return None
+
+
+    @database_sync_to_async
+    def _delete_rest_channel(self, user):
+        print("delete restaurant channel")
+        print(user)
+        WSClients.objects.filter(user=user).delete()
+        return None
+
+
+
+
+
+
+
+
 
 
 

@@ -53,7 +53,8 @@ urlpatterns = [
     url(r'^pin_login/$', views.pin_login, name='pin_login'),
     url(r'^rest_login/$', views.rest_login, name='rest_login'),    
     url(r'^rest_get_data/$', views.rest_get_data, name='rest_get_data'),
-
+    url(r'^get_access_token/$', views.get_access_token, name='get_access_token'),
+    
 ]
 
 urlpatterns += router.urls

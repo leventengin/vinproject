@@ -119,7 +119,7 @@ def pin_login(request):
         kurye = Courier.objects.get(pin=pin)
     except:
         return Response({'success': False,
-                         'message': 'Pin tanımlı değil',
+                         'message': 'Hatalı PIN!. Kayıtlı olduğunuz restorandan PIN inizi değiştirebilirsiniz.',
                          'response' : None,
                         },
                         status=HTTP_400_BAD_REQUEST)
@@ -221,7 +221,7 @@ def rest_login(request):
                         status=HTTP_400_BAD_REQUEST)        
 
 
-    json_data = {'username':restaurant.user_restaurant.username, 'password': restaurant.user_restaurant.password}
+    json_data = {'username':username, 'password': password}
     print(json_data)
 
     response_login = requests.post(
@@ -231,6 +231,39 @@ def rest_login(request):
 
     response_login_dict = json.loads(response_login.content)
     return Response(response_login_dict, response_login.status_code)
+
+
+
+
+
+@csrf_exempt
+@api_view(["POST"])
+@permission_classes([permissions.AllowAny,])
+def get_access_token(request):
+    print("-------------get access token---------------")
+    r_token = request.data.get("abc").rstrip()
+    print(r_token)
+    if not r_token:
+        return Response({'success': False,
+                         'message': 'Bilgi eksik',
+                         'response' : None
+                        },
+                        status=HTTP_400_BAD_REQUEST)
+
+    json_data = {'refresh':r_token}
+    print(json_data)
+
+    response_access = requests.post(
+        request.build_absolute_uri(reverse('token_refresh')),
+        data=json_data
+    )
+    print("response_access:", response_access.status_code)
+    print("response_access_content:", response_access.content)
+
+    response_access_dict = json.loads(response_access.content)
+    print("response_access_dictionary_access:", response_access_dict["access"])    
+    return Response(response_access_dict, response_access.status_code)
+
 
 
 
