@@ -1434,7 +1434,7 @@ def delivery_process(request):
         count = count -1
         delivery_obj.active_count = count
         delivery_obj.save()
-        if count > 1: 
+        if count > 0: 
             # burada bir sonraki sıradaki kişiye SMS at
             pass
         else: 
@@ -1451,7 +1451,7 @@ def delivery_process(request):
         count = count -1
         delivery_obj.active_count = count
         delivery_obj.save()
-        if count > 1: 
+        if count > 0: 
             # burada bir sonraki sıradaki kişiye SMS at
             pass
         else: 
@@ -1469,7 +1469,7 @@ def delivery_process(request):
         count = count -1
         delivery_obj.active_count = count
         delivery_obj.save()
-        if count > 1: 
+        if count > 0: 
             # burada bir sonraki sıradaki kişiye SMS at
             pass
         else: 
