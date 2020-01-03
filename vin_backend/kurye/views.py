@@ -163,8 +163,8 @@ def pin_login(request):
 @csrf_exempt
 @api_view(["POST"])
 @permission_classes([permissions.AllowAny,])
-def rest_login(request):
-    print("-------------restorant login---------------")
+def login(request):
+    print("-------------login---------------")
     username = request.data.get("username").rstrip()
     password = request.data.get("password")
     print(username)
@@ -211,15 +211,6 @@ def rest_login(request):
                         status=HTTP_400_BAD_REQUEST)
 
 
-    restaurant = Restaurant.objects.filter(user_restaurant=user).first()
-
-    if not restaurant:
-        return Response({'success': False,
-                         'message': 'Restoran tanımlı değil',
-                         'response' : None
-                        },
-                        status=HTTP_400_BAD_REQUEST)        
-
 
     json_data = {'username':username, 'password': password}
     print(json_data)
@@ -229,10 +220,80 @@ def rest_login(request):
         data=json_data
     )
 
+    if response_login.status_code != 200:
+        return Response({'success': False,
+                         'message': 'Token oluşturamadı!',
+                         'response' : None
+                        },
+                        status=HTTP_400_BAD_REQUEST)  
+
+
     response_login_dict = json.loads(response_login.content)
-    return Response(response_login_dict, response_login.status_code)
+
+    return Response({'success': True,
+                    'message': 'Başarılı login',
+                    'response': {   'user_type': user.user_type,
+                                    'r_token':  response_login_dict["refresh"]
+                                }               
+                    },
+                    status=HTTP_200_OK)
+    
+    #return Response(response_login_dict, response_login.status_code)
 
 
+
+@csrf_exempt
+@api_view(["POST"])
+@permission_classes([permissions.AllowAny,])
+def forget_pw(request):
+    print("-------------forget_pw---------------")
+    username = request.data.get("username").rstrip()
+    print(username)
+    if not username:
+        return Response({'success': False,
+                         'message': 'Lütfen kullanıcı adı giriniz',
+                         'response' : None
+                        },
+                        status=HTTP_400_BAD_REQUEST)
+    
+    if '@' in username:
+        pass
+    else:
+        return Response({'success': False,
+                         'message': 'Lütfen eposta hesabı giriniz',
+                         'response' : None
+                        },
+                        status=HTTP_400_BAD_REQUEST)
+
+    User=get_user_model()
+    try:
+        user = User.objects.get(username=username)
+    except:
+        return Response({'success': False,
+                         'message': 'Kullanıcı adı hatalı',
+                         'response' : None
+                        },
+                        status=HTTP_400_BAD_REQUEST)
+
+
+    if user.is_active is False:
+        return Response({'success': False,
+                         'message': 'Hesap aktif değil',
+                         'response' : None
+                        },
+                        status=HTTP_400_BAD_REQUEST)
+
+    """
+        Burada pw unutma durumu için mail atma işlemi yada link atma işlemi yapılacak..
+    """
+
+    return Response({'success': True,
+                    'message': 'Link gönderildi',
+                    'response': None          
+                    },
+                    status=HTTP_200_OK)
+    
+    #return Response(response_login_dict, response_login.status_code)
 
 
 
@@ -267,7 +328,85 @@ def get_access_token(request):
 
 
 
+@csrf_exempt
+@api_view(["POST"])
+@permission_classes([permissions.AllowAny,])
+def create_new_pw(request):
+    print("-------------create new password-------------")
+    username = request.data.get("username").rstrip()
+    password = request.data.get("password")
+    print(username)
+    print(password)
+    if not username or not password:
+        return Response({'success': False,
+                         'message': 'Lütfen kullanıcı adı ve parola giriniz',
+                         'response' : None
+                        },
+                        status=HTTP_400_BAD_REQUEST)
+    
+    if '@' in username:
+        pass
+    else:
+        return Response({'success': False,
+                         'message': 'Lütfen eposta hesabı giriniz',
+                         'response' : None
+                        },
+                        status=HTTP_400_BAD_REQUEST)
 
+    User=get_user_model()
+    try:
+        user = User.objects.get(username=username)
+    except:
+        return Response({'success': False,
+                         'message': 'Kullanıcı adı hatalı',
+                         'response' : None
+                        },
+                        status=HTTP_400_BAD_REQUEST)
+
+    if user.is_active is False:
+        return Response({'success': False,
+                         'message': 'Hesap aktif değil',
+                         'response' : None
+                        },
+                        status=HTTP_400_BAD_REQUEST)
+
+    if validate_password(password, user=None, password_validators=None):
+        return Response({'success': False,
+                         'message': 'Password hatalı',
+                         'response' : None
+                        },
+                        status=HTTP_400_BAD_REQUEST)    
+                           
+    user.set_password(password)
+    user.save()
+
+    json_data = {'username':username, 'password': password}
+    print(json_data)
+
+    response_login = requests.post(
+        request.build_absolute_uri(reverse('token_obtain_pair')),
+        data=json_data
+    )
+
+    if response_login.status_code != 200:
+        return Response({'success': False,
+                         'message': 'Token oluşturamadı!',
+                         'response' : None
+                        },
+                        status=HTTP_400_BAD_REQUEST)  
+
+
+    response_login_dict = json.loads(response_login.content)
+
+    return Response({'success': True,
+                    'message': 'Başarılı login',
+                    'response': {   'user_type': user.user_type,
+                                    'r_token':  response_login_dict["refresh"]
+                                }               
+                    },
+                    status=HTTP_200_OK)
+    
+    #return Response(response_login_dict, response_login.status_code)
 
 
 

@@ -14,7 +14,7 @@ from channels.layers import get_channel_layer
 # from .restlist import calculate_distance, siraya_gir
 from decimal import Decimal
 import math
-
+from haversine import haversine, Unit
 
 
 
@@ -435,14 +435,15 @@ class District(models.Model):
 
 
 def calculate_distance(latitude, longitude, rest_latitude, rest_longitude ):
+
     print("longitude", longitude)
     print("latitude", latitude)
     print("rest_longitude", rest_longitude)
     print("rest_latitude", rest_latitude)   
-    # iki lokasyon arasındaki uzaklığı hesapla - HAVERSINE
+
     new_latitude = Decimal(latitude)
     new_longitude = Decimal(longitude)
-
+    """
     R = 6372800  # Earth radius in meters
     
     phi1, phi2 = math.radians(new_latitude), math.radians(rest_latitude) 
@@ -454,7 +455,12 @@ def calculate_distance(latitude, longitude, rest_latitude, rest_longitude ):
     
     distance = 2*R*math.atan2(math.sqrt(a), math.sqrt(1 - a))
     print("distance", distance)
+    """
+    A = (new_latitude, new_longitude)
+    B = (rest_latitude, rest_longitude)
+    distance = haversine(A,B)
+    print("distance", distance)
 
-    return distance
+    return distance*1000
 
 

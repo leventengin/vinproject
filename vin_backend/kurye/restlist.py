@@ -15,7 +15,7 @@ def calculate_distance(latitude, longitude, rest_latitude, rest_longitude ):
     new_latitude = Decimal(latitude)
     new_longitude = Decimal(longitude)
 
-    R = 6372800  # Earth radius in meters
+    R = 6371000  # Earth radius in meters
     
     phi1, phi2 = math.radians(new_latitude), math.radians(rest_latitude) 
     dphi       = math.radians(rest_latitude - new_latitude)
