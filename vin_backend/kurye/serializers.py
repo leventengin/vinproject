@@ -14,6 +14,7 @@ class UserSerializer(serializers.ModelSerializer):
         model = get_user_model()
         #fields = '__all__'
         fields = [
+                'pk',
                 'username',
                 'first_name', 
                 'last_name', 
@@ -38,12 +39,20 @@ class RestaurantSerializer(serializers.ModelSerializer):
         fields = [  
                     'pk',
                     'name', 
+                    'company',
                     'tel_no', 
+                    'second_tel',
                     'allow_self_delivery', 
                     'latitude',
                     'longitude',
-                    'registered_couriers'
+                    'registered_couriers',
+                    'active_couriers',
+                    'address',
+                    'district',
+                    'town',
+                    'city',
                 ]
+
 
 
 class OrderSerializer(serializers.ModelSerializer):
@@ -173,7 +182,7 @@ class RestSerializer(serializers.ModelSerializer):
                     'allow_self_delivery',
                     'registered_couriers',
                     'active_couriers',
-                    'adress',
+                    'address',
                     'district',
                     'town',
                     'city',

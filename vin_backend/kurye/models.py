@@ -115,7 +115,7 @@ class Restaurant(models.Model):
     allow_self_delivery = models.BooleanField(blank=False, default=False)
     registered_couriers = models.ManyToManyField('Courier', related_name="registered_couriers", blank=True)
     active_couriers = models.ManyToManyField('Courier', related_name="active_couriers", blank=True)
-    adress = models.TextField()
+    address = models.TextField()
     district = models.CharField(max_length=80)
     town = models.CharField(max_length=80)
     city = models.CharField(max_length=80)

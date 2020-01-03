@@ -52,9 +52,9 @@ urlpatterns = [
     url(r'^refresh/$', TokenRefreshView.as_view(), name='token_refresh'),
     url(r'^pin_login/$', views.pin_login, name='pin_login'),
     url(r'^login/$', views.login, name='login'),    
-    url(r'^rest_get_data/$', views.rest_get_data, name='rest_get_data'),
     url(r'^forget_pw/$', views.forget_pw, name='forget_pw'),    
     url(r'^create_new_pw/$', views.create_new_pw, name='create_new_pw'),    
+    url(r'^rest_get_data/$', views.rest_get_data, name='rest_get_data'),
     url(r'^get_access_token/$', views.get_access_token, name='get_access_token'),
     
 ]

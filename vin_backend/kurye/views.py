@@ -230,10 +230,30 @@ def login(request):
 
     response_login_dict = json.loads(response_login.content)
 
+
+    user_serializer = UserSerializer(user)
+    user_data = user_serializer.data
+
+    rest_data = None
+
+    if user.user_type == "1":
+        restaurant = Restaurant.objects.filter(user_restaurant=user).first()
+        if not restaurant:
+            return Response({'success': False,
+                            'message': 'Restoran tanımlı değil',
+                            'response' : None
+                            },
+                            status=HTTP_400_BAD_REQUEST)   
+
+        rest_serializer = RestaurantSerializer(restaurant)
+        rest_data = rest_serializer.data
+
     return Response({'success': True,
                     'message': 'Başarılı login',
-                    'response': {   'user_type': user.user_type,
-                                    'r_token':  response_login_dict["refresh"]
+                    'response': {   
+                                    'r_token':  response_login_dict["refresh"],
+                                    'user': user_data,
+                                    'restaurant': rest_data,
                                 }               
                     },
                     status=HTTP_200_OK)
@@ -398,13 +418,33 @@ def create_new_pw(request):
 
     response_login_dict = json.loads(response_login.content)
 
+    user_serializer = UserSerializer(user)
+    user_data = user_serializer.data
+
+    rest_data = None
+
+    if user.user_type == "1":
+        restaurant = Restaurant.objects.filter(user_restaurant=user).first()
+        if not restaurant:
+            return Response({'success': False,
+                            'message': 'Restoran tanımlı değil',
+                            'response' : None
+                            },
+                            status=HTTP_400_BAD_REQUEST)   
+
+        rest_serializer = RestaurantSerializer(restaurant)
+        rest_data = rest_serializer.data
+
     return Response({'success': True,
                     'message': 'Başarılı login',
-                    'response': {   'user_type': user.user_type,
-                                    'r_token':  response_login_dict["refresh"]
+                    'response': {   
+                                    'r_token':  response_login_dict["refresh"],
+                                    'user': user_data,
+                                    'restaurant': rest_data,
                                 }               
                     },
                     status=HTTP_200_OK)
+
     
     #return Response(response_login_dict, response_login.status_code)
 
