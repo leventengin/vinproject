@@ -864,14 +864,14 @@ def create_courier(request):
     #print(r_token)
 
 
-
+    """
     user = request.user
     if user.user_type != "1":
        return Response({'success': False,
                         'message': 'Sadece restoranlar kurye kaydı yapabilir!',
                         },
                         status=HTTP_200_OK)        
-
+    """
     # gelen yeni motorcu bilgilerinde token, ad , soyad eksik mi bak
     #---------------------------------------------------------------
     if not first_name or not last_name:
