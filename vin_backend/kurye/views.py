@@ -2,6 +2,7 @@
 from rest_framework import viewsets
 from django.conf import settings
 from .models import User, Company, Restaurant, Delivery, Order, Courier
+from .models import City, Town, District
 from .serializers import UserSerializer, CompanySerializer, RestaurantSerializer, CourierSerializer
 from .serializers import DeliverySerializer, OrderSerializer, ProfilePictureSerializer
 from .serializers import RestSerializer
@@ -800,6 +801,41 @@ def my_jwt_response_payload_handler(token, user=None, request=None):
     }
 
 
+@csrf_exempt
+@api_view(["POST"])
+@permission_classes([permissions.AllowAny,])
+def list_district(request):
+    print("-------------list district---------------")
+
+    cities = City.objects.all()
+    city_list = []
+    for city in cities:
+        city_list.append({"city": city.name})
+
+    towns = Town.objects.all()
+    town_list = []
+    for town in towns:
+        town_list.append({"city": town.city.name, "town": town.name})
+ 
+    districts = District.objects.all()
+    district_list = []
+    for district in districts:
+        district_list.append({"town": district.town.name, "district":district.name})
+ 
+    print(city_list)
+    print(town_list)
+    print(district_list)
+
+    return Response({   'success': True,
+                        'message': 'Kayıt başarılı',
+                        'response': {
+                            'city': city_list,
+                            'town': town_list,
+                            'district': district_list
+                            }
+                        },
+                        status=HTTP_200_OK)
+
 
 
 @csrf_exempt
@@ -826,26 +862,6 @@ def create_courier(request):
     print(city)
     print(tel_no)
     #print(r_token)
-
-    """
-    if not r_token:
-        return Response({'success': False,
-                         'message': 'Token bilgisi eksik',
-                         'response' : None
-                        },
-                        status=HTTP_200_OK)
-
-    json_data = {'refresh':r_token}
-    print(json_data)
-    response_access = requests.post(
-        request.build_absolute_uri(reverse('token_refresh')),
-        data=json_data
-    )
-    response_access_dict = json.loads(response_access.content)
-    a_token = response_access_dict["access"]
-    """
-
-
 
 
 

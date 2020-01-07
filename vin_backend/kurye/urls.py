@@ -58,6 +58,7 @@ urlpatterns = [
     url(r'^create_new_pw/$', views.create_new_pw, name='create_new_pw'),    
     url(r'^rest_get_data/$', views.rest_get_data, name='rest_get_data'),
     url(r'^get_access_token/$', views.get_access_token, name='get_access_token'),
+    url(r'^list_district/$', views.list_district, name='list_district'),
     url(r'^create_courier/$', views.create_courier, name='create_courier'),
     #url(r'^register_courier/$', views.register_courier, name='register_courier'),
     #url(r'^unregister_courier/$', views.unregister_courier, name='unregister_courier'),

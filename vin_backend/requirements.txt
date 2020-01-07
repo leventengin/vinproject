@@ -27,6 +27,7 @@ djangorestframework-jwt==1.11.0
 djangorestframework-simplejwt==4.3.0
 gunicorn==19.7.1
 h2==2.6.2
+haversine==2.1.2
 hiredis==1.0.1
 hpack==3.0.0
 http-ece==1.1.0

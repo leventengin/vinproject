@@ -433,10 +433,10 @@ class Town(models.Model):
         return '%s-%s' % (self.city, self.name)
 
 class District(models.Model):
-    Town = models.ForeignKey(Town, related_name='mahalle_ilce', on_delete=models.PROTECT)    
+    town = models.ForeignKey(Town, related_name='mahalle_ilce', on_delete=models.PROTECT)    
     name = models.CharField(max_length=80, default="Fenerbahçe")
     def __str__(self):
-        return '%s-%s-%s' % (self.Town.City, self.Town, self.name)
+        return '%s-%s' % (self.town, self.name)
 
 
 
