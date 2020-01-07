@@ -48,8 +48,6 @@ ISLEM_TIPI = (
 ("1", 'Teslim edildi'),
 ("2", 'Ödeme alınamadı, teslim edildi'),
 ("3", 'Teslim edilemedi'),
-("4", 'SOS'),
-("5", 'SOS kaldır'),
 )
 
 
@@ -210,6 +208,11 @@ class Courier(models.Model):
     latitude = models.DecimalField(max_digits=16, decimal_places=12, default="0.0")
     longitude = models.DecimalField(max_digits=16, decimal_places=12,  default="0.0")
     worker_active = models.BooleanField(default=True)
+    own_motocycle = models.BooleanField(default=False)
+    address = models.TextField(blank=True, null=True)
+    district = models.CharField(max_length=80, blank=True, null=True)
+    town = models.CharField(max_length=80, blank=True, null=True)
+    city = models.CharField(max_length=80, blank=True, null=True)
     tel_no = models.CharField(max_length=10, default="")
     pin = models.CharField(max_length=6, default="")
     registered_restaurants = models.ManyToManyField(Restaurant, blank=True)
@@ -266,6 +269,10 @@ def courier_queue_change(sender, instance, **kwargs):
             # calculate distance 
             #--------------------
             distance = calculate_distance(instance.latitude, instance.longitude, instance.active_restaurant.latitude, instance.active_restaurant.longitude)
+            # zaman  hesaplaması için ortalama hız 30km/hr = 500 mt/dk
+            # zaman = x/v =  distance / 500
+            #--------------------------------
+            time = distance / 500
             print("calculated distance between courier and restaurant...:", distance)
             queue_message = {"type": "rest_change", 
                              "id": instance.pk,
@@ -279,8 +286,8 @@ def courier_queue_change(sender, instance, **kwargs):
                              "last_name": instance.user_courier.last_name,
                              "pic_profile": instance.user_courier.pic_profile_abs_url,
                              "remaining_order": instance.active_delivery.active_count,
-                             "distance": distance
-                             # adı, soyadı, resmi, distance-time, remaining_order eklendi...
+                             "distance": distance,
+                             "time": time
                             }
             channel_layer = get_channel_layer()  
             print(instance.active_restaurant)

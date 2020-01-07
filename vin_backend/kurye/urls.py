@@ -12,6 +12,7 @@ from rest_framework_simplejwt.views import (
 from django.contrib.auth import views
 from . import views
 from .views import ProfilePictureUploadView, PicProfileUploadView
+from rest_framework_jwt.views import obtain_jwt_token, refresh_jwt_token
 
 
 """
@@ -34,7 +35,6 @@ urlpatterns = [
     url(r'^select_restaurant/$', views.select_restaurant),
     url(r'^get_delivery/$', views.get_delivery),  
     url(r'^update_device/$', views.update_device),      
-    url(r'^register_courier/$', views.register_courier),
     url(r'^create_delivery/$', views.create_delivery),
     url(r'^create_self_delivery/$', views.create_self_delivery),    
     url(r'^update_delivery/$', views.update_delivery),
@@ -49,14 +49,19 @@ urlpatterns = [
     url(r'^record_courier_check/$', views.record_courier_check),
     url(r'^record_courier_accept/$', views.record_courier_accept),   
     url(r'^token/$', TokenObtainPairView.as_view(), name='token_obtain_pair'),
+    #url(r'^token/$', obtain_jwt_token, name='token_obtain_pair'),
     url(r'^refresh/$', TokenRefreshView.as_view(), name='token_refresh'),
+    #url(r'^refresh/$', refresh_jwt_token, name='token_refresh'),    
     url(r'^pin_login/$', views.pin_login, name='pin_login'),
     url(r'^login/$', views.login, name='login'),    
     url(r'^forget_pw/$', views.forget_pw, name='forget_pw'),    
     url(r'^create_new_pw/$', views.create_new_pw, name='create_new_pw'),    
     url(r'^rest_get_data/$', views.rest_get_data, name='rest_get_data'),
     url(r'^get_access_token/$', views.get_access_token, name='get_access_token'),
-    
+    url(r'^create_courier/$', views.create_courier, name='create_courier'),
+    #url(r'^register_courier/$', views.register_courier, name='register_courier'),
+    #url(r'^unregister_courier/$', views.unregister_courier, name='unregister_courier'),
+    #url(r'^create_pin/$', views.create_pin, name='create_pin'),
 ]
 
 urlpatterns += router.urls
