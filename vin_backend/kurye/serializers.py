@@ -119,7 +119,7 @@ class CourierSerializer(serializers.ModelSerializer):
                     'device_id',
                     'registered_restaurants',
                     'city',
-                    'town'
+                    'town',
                     'district'
                 ]        
     def get_username(self,obj):
