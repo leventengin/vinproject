@@ -827,7 +827,7 @@ def list_district(request):
     print(district_list)
 
     return Response({   'success': True,
-                        'message': 'Kayıt başarılı',
+                        'message': 'Listeler başarılı',
                         'response': {
                             'city': city_list,
                             'town': town_list,

@@ -295,8 +295,8 @@ def courier_queue_change(sender, instance, **kwargs):
             channel_obj = WSClients.objects.filter(user=instance.active_restaurant.user_restaurant).last()
             print("CHANNEL OBJ.................:")
             print(channel_obj)
-            print(channel_obj.user)
-            print(channel_obj.channel_name)
+            #print(channel_obj.user)
+            #print(channel_obj.channel_name)
 
             if channel_obj:
                 channel_name = channel_obj.channel_name

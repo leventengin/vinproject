@@ -15,10 +15,10 @@
 
 */
 
-//const API_BASE_URL="http://127.0.0.1:8000/";
-//const WS_BASE_URL="ws://127.0.0.1:8000/";
-const API_BASE_URL="http://172.104.246.227:8080/";
-const WS_BASE_URL="ws://172.104.246.227:8080/";
+const API_BASE_URL="http://127.0.0.1:8000/";
+const WS_BASE_URL="ws://127.0.0.1:8000/";
+//const API_BASE_URL="http://172.104.246.227:8080/";
+//const WS_BASE_URL="ws://172.104.246.227:8080/";
 // ##############################
 // // // Function that converts from hex color to rgb color
 // // // Example: input = #9c27b0 => output = 156, 39, 176
