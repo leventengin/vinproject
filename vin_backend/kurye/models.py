@@ -310,36 +310,6 @@ def courier_queue_change(sender, instance, **kwargs):
 
 
 
-"""
-@receiver(pre_save, sender=Courier)
-def courier_any_change(sender, instance, **kwargs):
-    print("courier any change")
-    
-    try:
-        # ws message if location, queue, state changed
-        if  (status_old.latitude != instance.longitude) or (status_old.longitude != instance.longitude) or (status_old.state != instance.state) or (status_old.queue != instance.queue): 
-            queue_message = {"type": "rest_change", 
-                             "state": instance.state, 
-                             "queue": instance.queue,
-                             "latitude": instance.latitude,
-                             "longitude": instance.longitude,
-                             "tel_no": instance.tel_no,
-                             "active_restaurant": instance.active_restaurant
-                            }
-            channel_layer = get_channel_layer()   
-            channel_obj = WSClients.objects.filter(user=instance.active_restaurant.user_restaurant).last()
-            if channel_obj:
-                channel_name = channel_obj.channel_name
-                print("any>>any change")
-                print(channel_layer)
-                print(channel_name)                
-                async_to_sync(channel_layer.send)(channel_name, queue_message)                            
-    
-
-    except sender.DoesNotExist:
-        print("sender - courier does not exist")
-"""
-
 
 class WSClients(models.Model):
     user =  models.ForeignKey(User, related_name='wsclients', on_delete=models.PROTECT)
