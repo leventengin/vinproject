@@ -851,7 +851,7 @@ def create_courier(request):
     town = request.data.get("town")
     city = request.data.get("city")
     tel_no = request.data.get("tel_no")
-    r_token = request.data.get("r_token")
+    #r_token = request.data.get("r_token")
 
     print(first_name)
     print(last_name)
@@ -939,8 +939,13 @@ def create_courier(request):
                             },
                             status=HTTP_200_OK)       
 
-        new_pin = _pin()
-        print(new_pin)
+        created_pin = False
+        while not created_pin:
+            new_pin = _pin()
+            print(new_pin)
+            courier_pin = Courier.objects.filter(pin=new_pin)
+            if not courier_pin:
+                created_pin = True
 
         Courier.objects.create( user_courier=user,
                                 own_motocycle=own_motocycle,
@@ -964,238 +969,203 @@ def create_courier(request):
 
 
 
-
-
 @csrf_exempt
 @api_view(["POST"])
 @permission_classes([permissions.AllowAny,])
-def record_courier_check(request):
-    print("-------------record courier check---------------")
-    token = request.data.get("token")
+def get_courier(request):
+    print("-------------get_courier---------------")
     tel_no = request.data.get("tel_no")
-
-    print(token)
     print(tel_no)
 
-    # gelen yeni motorcu bilgilerinde token, ad , soyad eksik mi bak
-    #---------------------------------------------------------------
-    if not token:
-        return Response({'success': 'false',
-                        'message': 'Eksik bilgi gönderildi',
-                        },
-                        status=HTTP_200_OK)
 
     # telefon numarası eksik mi bak, önemli
     if not tel_no:
-            return Response({'success': 'false',
-                            'message': 'Telefon numarası eksik',
+            return Response({'success': False,
+                            'message': 'Telefon numarası girilmemiş',
                             },
                             status=HTTP_200_OK)
 
-    # gönderimi yapan restorant için token var mu bak,
-    # token değişmiş olabilir bu durumda tekrar login olmalı
+    # kurye için telefon numarası girilmiş mi bak 
+
     try:
-        token_obj = Token.objects.get(key=token)
+        courier = Courier.objects.get(tel_no=tel_no)
     except:
-        return Response({'success': 'false',
-                        'message': 'Token bulunamadı, lütfen login olun',
+         return Response({'success': False,
+                         'message': 'Telefon numarası kayıtlı deği!',
                         },
                         status=HTTP_200_OK)
+    
+    serializer = CourierSerializer(courier)
 
-
-
-    # burada bilgileri gelmiş olan yeni motorcuyu kontrol et uygun mu
-    # ---------------------------------------------------------------
-
-    user_obj = User.objects.filter(tel_no=tel_no).first()
-
-    if user_obj.count() != 1:
-        return Response({'success': 'false',
-                        'message': 'Telefon numarası birden çok kayıtlı',
-                        },
-                        status=HTTP_200_OK)
-
-    token_obj = Token.objects.get(key=token)
-    firma_obj = Restaurant.objects.filter(id=token_obj.user).first()
-
-    if not(firma_obj):
-        return Response({'success': 'false',
-                        'message': 'Restorant kayıtlı değil',
-                        },
-                        status=HTTP_200_OK)
-
-
-
-    return Response({'success': 'true',    
-                    'message': 'Başarılı login',
-                    'courier': {'user_id': user_obj.id,
-                                'pic_profile': user_obj.pic_profile,
-                                'first_name': user_obj.first_name,
-                                'last_name': user_obj.last_name,
-                                'durum': user_obj.durum,
-                                'tel_no': user_obj.tel_no,
-                                'kayıtlı_motorcular': firma_obj.kayıtlı_motorcular,
-                                }},
-                    status=HTTP_200_OK)
-
-
-
-@csrf_exempt
-@api_view(["POST"])
-@permission_classes([permissions.AllowAny,])
-def record_courier_accept(request):
-    print("-------------record courier accept---------------")
-    token = request.data.get("token")
-    tel_no = request.data.get("tel_no")
-    courier_list = request.data.get("courier_list")
-
-    print(token)
-    print(tel_no)
-    print(courier_list)
-
-    # gelen yeni motorcu bilgilerinde token, ad , soyad eksik mi bak
-    #---------------------------------------------------------------
-    if not token:
-        return Response({'success': 'false',
-                        'message': 'Eksik bilgi gönderildi',
-                        },
-                        status=HTTP_200_OK)
-
-    # telefon numarası eksik mi bak, önemli
-    if not tel_no:
-            return Response({'success': 'false',
-                            'message': 'Telefon numarası eksik',
-                            },
-                            status=HTTP_200_OK)
-
-    # gönderimi yapan restorant için token var mu bak,
-    # token değişmiş olabilir bu durumda tekrar login olmalı
-    try:
-        token_obj = Token.objects.get(key=token)
-    except:
-        return Response({'success': 'false',
-                        'message': 'Token bulunamadı, lütfen login olun',
-                        },
-                        status=HTTP_200_OK)
-
-
-    # burada bilgileri gelmiş olan yeni motorcuyu kontrol et uygun mu
-    # ---------------------------------------------------------------
-
-
-    token_obj = Token.objects.get(key=token)
-    firma_obj = Restaurant.objects.filter(id=token_obj.user).first()
-
-    if not(firma_obj):
-        return Response({'success': 'false',
-                        'message': 'Restorant kayıtlı değil',
-                        },
-                        status=HTTP_200_OK)
-
-    firma_obj.kayitli_motorcular =  courier_list
-    firma_obj.save()
-
-    return Response({'success': 'true',
-                    'message': 'Motorcu  kayıtlı listesine alındı',
+    return Response({'success': True,
+                    'message': 'Kurye bilgileri',
+                    'response': { 'courier': serializer.data }               
                     },
                     status=HTTP_200_OK)
 
 
 
-
-
 @csrf_exempt
 @api_view(["POST"])
 @permission_classes([permissions.AllowAny,])
-def courier_list_details(request):
-    print("-------------courier list details ---------------")
-    token = request.data.get("token")
-    name = request.data.get("name")
-    family_name = request.data.get("family_name")
-    kendi_motoru = request.data.get("kendi_motoru")
-    fulltime_parttime = request.data.get("fulltime_parttime")
-    il = request.data.get("il")
-    ilce = request.data.get("ilce")
-    mahalle = request.data.get("mahalle")
-    adress = request.data.get("adress")
-    tel_no = request.data.get("tel_no")
-    picture = request.FILES.get("picture")
+def register_courier(request):
+    print("-------------register_courier---------------")
+    c_id = request.data.get("c_id")    
+    print(c_id)
 
-    print(token)
-    print(name)
-    print(family_name)
-    print(kendi_motoru)
-    print(fulltime_parttime)
-    print(il)
-    print(ilce)
-    print(mahalle)
-    print(adress)
-    print(tel_no)
-    print(picture)
-
-
-    # gelen yeni motorcu bilgilerinde token, ad , soyad eksik mi bak
-    #---------------------------------------------------------------
-    if not token or not name or not family_name:
-        return Response({'success': 'false',
+    # idler eksik mi bak
+    if not c_id:
+        return Response({'success': False,
                         'message': 'Eksik bilgi gönderildi',
                         },
                         status=HTTP_200_OK)
 
-    # telefon numarası eksik mi bak, önemli
-    if not tel_no:
-            return Response({'success': 'false',
-                            'message': 'Telefon numarası eksik',
-                            },
-                            status=HTTP_200_OK)
+    # kurye restoran kayıt işlemlerini gerçekleştir
 
-    # gönderimi yapan restorant için token var mu bak,
-    # token değişmiş olabilir bu durumda tekrar login olmalı
-    try:
-        token_obj = Token.objects.get(key=token)
-    except:
-        return Response({'success': 'false',
-                        'message': 'Token bulunamadı, lütfen login olun',
+    user = request.user
+    print(user)
+    print(user.user_type)
+    
+    courier = Courier.objects.filter(pk=c_id).first()
+    if not courier:
+        return Response({'success': False,
+                        'message': 'Tanımlı kurye yok!',
                         },
                         status=HTTP_200_OK)
 
-    # aynı telefon numarası var mı  kontrol et, telefon numarası tek olmalı
-    User = get_user_model()
-    user_obj = User.objects.filter(tel_no=tel_no)
-    if user_obj:
-         return Response({'success': 'false',
-                        'message': 'Bu kişi daha önce telefon numarası ile kayıtlı',
+    restaurant = Restaurant.objects.filter(user_restaurant=user).first()
+    if not restaurant:
+        return Response({'success': False,
+                        'message': 'Tanımlı restoran yok!',
                         },
                         status=HTTP_200_OK)
+     
+    active = Restaurant.objects.filter(registered_couriers=courier)
+    if active:
+        return Response({'success': False,
+                        'message': 'Kurye kayıtlı durumda!',
+                        },
+                        status=HTTP_200_OK)
+   
+    with transaction.atomic():
+        restaurant.registered_couriers.add(courier)
+        courier.registered_restaurants.add(restaurant)
+        courier.save()
+        restaurant.save()
 
-    # burada bilgileri gelmiş olan yeni motorcuyu kaydet
-    # --------------------------------------------------
-
-    password = _pw()
-    print(password)
-
-    User.objects.create(username=tel_no,
-                        first_name=name,
-                        last_name=family_name,
-                        password=password,
-                        tipi=0,
-                        durum=0,
-                        tel_no=tel_no,
-                        #pic_profile=picture,
-                        )
-
-    user_obj = User.objects.last()
-    prit(user_obj.username)
-
-    return Response({'success': 'true',
-                    'message': 'Başarılı',
+    return Response({'success': True,
+                     'message': 'Kurye restorana kayıt oldu',
+                     'response': None              
                     },
                     status=HTTP_200_OK)
 
 
 
+@csrf_exempt
+@api_view(["POST"])
+@permission_classes([permissions.AllowAny,])
+def unregister_courier(request):
+    print("-------------register_courier---------------")
+    c_id = request.data.get("c_id")    
+    print(c_id)
 
 
+    # idler eksik mi bak
+    if not c_id:
+        return Response({'success': False,
+                        'message': 'Eksik bilgi gönderildi',
+                        },
+                        status=HTTP_200_OK)
+
+    # kurye restoran kayıt işlemlerini gerçekleştir
+
+    user = request.user
+    print(user)
+    print(user.user_type)
+    
+    courier = Courier.objects.filter(pk=c_id).first()
+    if not courier:
+        return Response({'success': False,
+                        'message': 'Tanımlı kurye yok!',
+                        },
+                        status=HTTP_200_OK)
+
+    restaurant = Restaurant.objects.filter(user_restaurant=user).first()
+    if not restaurant:
+        return Response({'success': False,
+                        'message': 'Tanımlı restoran yok!',
+                        },
+                        status=HTTP_200_OK)
+
+    active = Restaurant.objects.filter(registered_couriers=courier)
+    if not active:
+        return Response({'success': False,
+                        'message': 'Kurye kayıtlı değil!',
+                        },
+                        status=HTTP_200_OK)
+
+
+    with transaction.atomic():
+        restaurant.registered_couriers.remove(courier)
+        courier.registered_restaurants.remove(restaurant)
+        courier.save()
+        restaurant.save()
+
+    return Response({'success': True,
+                    'message': 'Kurye restorana kayıt oldu',
+                    'response': None              
+                    },
+                    status=HTTP_200_OK)
+
+
+
+@csrf_exempt
+@api_view(["POST"])
+@permission_classes([permissions.AllowAny,])
+def create_pin(request):
+    print("-------------register_courier---------------")
+    c_id = request.data.get("c_id")    
+    print(c_id)
+
+
+    # idler eksik mi bak
+    if not c_id:
+        return Response({'success': False,
+                        'message': 'Eksik bilgi gönderildi',
+                        },
+                        status=HTTP_200_OK)
+
+    # kurye restoran kayıt işlemlerini gerçekleştir
+
+    user = request.user
+    print(user)
+    print(user.user_type)
+    
+    courier = Courier.objects.filter(pk=c_id).first()
+    if not courier:
+        return Response({'success': False,
+                        'message': 'Tanımlı kurye yok!',
+                        },
+                        status=HTTP_200_OK)
+
+    created_pin = False
+    while not created_pin:
+        new_pin = _pin()
+        print(new_pin)
+        courier_pin = Courier.objects.filter(pin=new_pin)
+        if not courier_pin:
+            created_pin = True
+
+    user.pin = new_pin
+    user.save()
+
+    return Response({   'success': True,
+                        'message': 'Pin yaratıldı',
+                        'response': {
+                            'pin': new_pin
+                            }
+                        },
+                        status=HTTP_200_OK)
 
 
 

@@ -46,12 +46,8 @@ urlpatterns = [
     url(r'^sos/$', views.sos),
     url(r'^sos_cancel/$', views.sos_cancel),  
     url(r'^pic_profile/$', PicProfileUploadView.as_view()),                
-    url(r'^record_courier_check/$', views.record_courier_check),
-    url(r'^record_courier_accept/$', views.record_courier_accept),   
     url(r'^token/$', TokenObtainPairView.as_view(), name='token_obtain_pair'),
-    #url(r'^token/$', obtain_jwt_token, name='token_obtain_pair'),
     url(r'^refresh/$', TokenRefreshView.as_view(), name='token_refresh'),
-    #url(r'^refresh/$', refresh_jwt_token, name='token_refresh'),    
     url(r'^pin_login/$', views.pin_login, name='pin_login'),
     url(r'^login/$', views.login, name='login'),    
     url(r'^forget_pw/$', views.forget_pw, name='forget_pw'),    
@@ -59,10 +55,11 @@ urlpatterns = [
     url(r'^rest_get_data/$', views.rest_get_data, name='rest_get_data'),
     url(r'^get_access_token/$', views.get_access_token, name='get_access_token'),
     url(r'^list_district/$', views.list_district, name='list_district'),
-    url(r'^create_courier/$', views.create_courier, name='create_courier'),
-    #url(r'^register_courier/$', views.register_courier, name='register_courier'),
-    #url(r'^unregister_courier/$', views.unregister_courier, name='unregister_courier'),
-    #url(r'^create_pin/$', views.create_pin, name='create_pin'),
+    url(r'^get_courier/$', views.get_courier, name='get_courier'),
+    url(r'^create_courier/$', views.create_courier, name='create_courier'),    
+    url(r'^register_courier/$', views.register_courier, name='register_courier'),
+    url(r'^unregister_courier/$', views.unregister_courier, name='unregister_courier'),
+    url(r'^create_pin/$', views.create_pin, name='create_pin'),
 ]
 
 urlpatterns += router.urls
