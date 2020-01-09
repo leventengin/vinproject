@@ -576,10 +576,14 @@ class PicProfileUploadView(APIView):
         user.pic_profile_abs_url = request.build_absolute_uri(user.pic_profile.url)
         user.save()
 
+
         #img = Image.open(user.pic_profile.path)
         output_size = (50, 50)
+        #img.thumbnail(output_size)
         f.thumbnail(output_size)
-        user.pic_map.save(f.name, f, save=True)
+        print("just before saving new image!!!")
+        #img.save(user.pic_map.path)
+        user.pic_map.save(f.name, f , save=True)
         print(user.pic_map.url)
         full_path = request.get_host()+user.pic_map.url
         print(full_path)

@@ -121,6 +121,7 @@ class CourierSerializer(serializers.ModelSerializer):
                     'city',
                     'town',
                     'district',
+                    'address',
                     'own_motocycle'
                 ]        
     def get_username(self,obj):
