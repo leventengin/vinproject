@@ -47,7 +47,7 @@ from rest_framework.views import APIView
 from rest_framework import status
 from django.core.files.images import ImageFile
 from django.db import transaction
-
+from PIL import Image
 
 
 
@@ -573,9 +573,19 @@ class PicProfileUploadView(APIView):
         print(user.pic_profile.url)
         full_path = request.get_host()+user.pic_profile.url
         print(full_path)
-
         user.pic_profile_abs_url = request.build_absolute_uri(user.pic_profile.url)
         user.save()
+
+        #img = Image.open(user.pic_profile.path)
+        output_size = (50, 50)
+        f.thumbnail(output_size)
+        user.pic_map.save(f.name, f, save=True)
+        print(user.pic_map.url)
+        full_path = request.get_host()+user.pic_map.url
+        print(full_path)
+        user.pic_map_abs_url = request.build_absolute_uri(user.pic_map.url)
+        user.save()
+
 
         kurye = Courier.objects.get(user_courier=user)
         serializer = CourierSerializer(kurye)

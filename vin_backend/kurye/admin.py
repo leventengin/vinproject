@@ -20,7 +20,7 @@ class MyUserAdmin(UserAdmin):
     search_fields = UserAdmin.search_fields+('user_type',)
     # Yeni alanlar
     fieldsets = UserAdmin.fieldsets + (
-            (None, {'fields': ('user_type', 'pic_profile',)}),
+            (None, {'fields': ('user_type', 'pic_profile', 'pic_map',)}),
     )
 
 

@@ -89,8 +89,10 @@ DEVICE_PLATFORM = (
 class User(AbstractUser):
     pass
     user_type = models.CharField(max_length=2, default="0")
-    pic_profile = models.ImageField(upload_to='pic_profile/%Y/%m/%d/',blank=True, null=True,)
+    pic_profile = models.ImageField(upload_to='pic_profile/%Y/%m/%d/',blank=True, null=True)
     pic_profile_abs_url = models.TextField(blank=True, null=True, default=None)
+    pic_map = models.ImageField(upload_to='pic_map/%Y/%m/%d/',blank=True, null=True)
+    pic_map_abs_url = models.TextField(blank=True, null=True, default=None)
     def __str__(self):
        return '%s-%s' % (self.first_name, self.last_name)
 
