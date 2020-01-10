@@ -22,6 +22,8 @@ class UserSerializer(serializers.ModelSerializer):
                 'user_type', 
                 'pic_profile',
                 'pic_profile_abs_url',
+                'pic_map',
+                'pic_map_abs_url',                
                 ]
  
 

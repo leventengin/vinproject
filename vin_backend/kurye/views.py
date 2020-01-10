@@ -325,7 +325,7 @@ def forget_pw(request):
 
 @csrf_exempt
 @api_view(["POST"])
-@permission_classes([permissions.AllowAny,])
+@permission_classes([permissions.IsAuthenticated,])
 def get_access_token(request):
     print("-------------get access token---------------")
     r_token = request.data.get("abc").rstrip()
@@ -356,7 +356,7 @@ def get_access_token(request):
 
 @csrf_exempt
 @api_view(["POST"])
-@permission_classes([permissions.AllowAny,])
+@permission_classes([permissions.IsAuthenticated,])
 def create_new_pw(request):
     print("-------------create new password-------------")
     username = request.data.get("username").rstrip()
@@ -458,7 +458,7 @@ def create_new_pw(request):
 
 @csrf_exempt
 @api_view(["POST"])
-@permission_classes([permissions.AllowAny,])
+@permission_classes([permissions.IsAuthenticated,])
 def rest_get_data(request):
     print("-------------restorant get data ---------------")
     user = request.user
@@ -498,7 +498,7 @@ def rest_get_data(request):
 
 @csrf_exempt
 @api_view(["POST"])
-@permission_classes([permissions.AllowAny,])
+@permission_classes([permissions.IsAuthenticated,])
 def courier_get_self_data(request):
     print("-------------login_courier---------------")
 
@@ -568,28 +568,19 @@ class PicProfileUploadView(APIView):
                             'response' : None,
                             },
                             status=HTTP_200_OK)
+        with transaction.atomic():
+            user.pic_profile.save(f.name, f, save=True)
+            print(user.pic_profile.url)
+            full_path = request.get_host()+user.pic_profile.url
+            print(full_path)
+            user.pic_profile_abs_url = request.build_absolute_uri(user.pic_profile.url)
 
-        user.pic_profile.save(f.name, f, save=True)
-        print(user.pic_profile.url)
-        full_path = request.get_host()+user.pic_profile.url
-        print(full_path)
-        user.pic_profile_abs_url = request.build_absolute_uri(user.pic_profile.url)
-        user.save()
-
-
-        #img = Image.open(user.pic_profile.path)
-        output_size = (50, 50)
-        #img.thumbnail(output_size)
-        f.thumbnail(output_size)
-        print("just before saving new image!!!")
-        #img.save(user.pic_map.path)
-        user.pic_map.save(f.name, f , save=True)
-        print(user.pic_map.url)
-        full_path = request.get_host()+user.pic_map.url
-        print(full_path)
-        user.pic_map_abs_url = request.build_absolute_uri(user.pic_map.url)
-        user.save()
-
+            user.pic_map.save(f.name, f, save=True)
+            print(user.pic_map.url)
+            full_path = request.get_host()+user.pic_map.url
+            print(full_path)
+            user.pic_map_abs_url = request.build_absolute_uri(user.pic_map.url)
+            user.save()
 
         kurye = Courier.objects.get(user_courier=user)
         serializer = CourierSerializer(kurye)
@@ -817,7 +808,7 @@ def my_jwt_response_payload_handler(token, user=None, request=None):
 
 @csrf_exempt
 @api_view(["POST"])
-@permission_classes([permissions.AllowAny,])
+@permission_classes([permissions.IsAuthenticated,])
 def list_district(request):
     print("-------------list district---------------")
 
@@ -854,7 +845,7 @@ def list_district(request):
 
 @csrf_exempt
 @api_view(["POST"])
-@permission_classes([permissions.AllowAny,])
+@permission_classes([permissions.IsAuthenticated,])
 def create_courier(request):
     print("-------------create_courier---------------")
     first_name = request.data.get("first_name")
@@ -985,7 +976,7 @@ def create_courier(request):
 
 @csrf_exempt
 @api_view(["POST"])
-@permission_classes([permissions.AllowAny,])
+@permission_classes([permissions.IsAuthenticated,])
 def get_courier(request):
     print("-------------get_courier---------------")
     tel_no = request.data.get("tel_no")
@@ -1021,7 +1012,7 @@ def get_courier(request):
 
 @csrf_exempt
 @api_view(["POST"])
-@permission_classes([permissions.AllowAny,])
+@permission_classes([permissions.IsAuthenticated,])
 def register_courier(request):
     print("-------------register_courier---------------")
     c_id = request.data.get("c_id")    
@@ -1077,7 +1068,7 @@ def register_courier(request):
 
 @csrf_exempt
 @api_view(["POST"])
-@permission_classes([permissions.AllowAny,])
+@permission_classes([permissions.IsAuthenticated,])
 def unregister_courier(request):
     print("-------------register_courier---------------")
     c_id = request.data.get("c_id")    
@@ -1135,7 +1126,7 @@ def unregister_courier(request):
 
 @csrf_exempt
 @api_view(["POST"])
-@permission_classes([permissions.AllowAny,])
+@permission_classes([permissions.IsAuthenticated,])
 def create_pin(request):
     print("-------------register_courier---------------")
     c_id = request.data.get("c_id")    
@@ -1187,7 +1178,7 @@ def create_pin(request):
 
 @csrf_exempt
 @api_view(["POST"])
-@permission_classes([permissions.AllowAny,])
+@permission_classes([permissions.IsAuthenticated,])
 def rest_register(request):
     data = request.data
     username = data.get('username').rstrip()
@@ -1236,7 +1227,7 @@ def rest_register(request):
 
 @csrf_exempt
 @api_view(["POST"])
-@permission_classes([permissions.AllowAny,])
+@permission_classes([permissions.IsAuthenticated,])
 def rest_activate(request):
     try:
         activate_token = request.data.get('token')
@@ -2027,7 +2018,7 @@ def sos_cancel(request):
 
 @csrf_exempt
 @api_view(["POST"])
-@permission_classes([permissions.AllowAny,])
+@permission_classes([permissions.IsAuthenticated,])
 def logout(request):
     try:
         uid = request.data.get('uid')

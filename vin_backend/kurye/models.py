@@ -15,6 +15,7 @@ from channels.layers import get_channel_layer
 from decimal import Decimal
 import math
 from haversine import haversine, Unit
+from PIL import Image
 
 
 
@@ -95,6 +96,48 @@ class User(AbstractUser):
     pic_map_abs_url = models.TextField(blank=True, null=True, default=None)
     def __str__(self):
        return '%s-%s' % (self.first_name, self.last_name)
+
+    def save(self):
+        if self.pic_profile:          
+            User=get_user_model() 
+            super(User, self).save()
+            image = Image.open(self.pic_profile)
+            (width, height) = image.size
+            print("width", width)
+            print("heigh", height)
+            if (width > 500)  or (height > 500):
+                if (width < height):
+                    factor = height
+                else:
+                    factor = width
+                w = int(width/factor*500)
+                h = int(height/factor*500)
+                print("w",w)
+                print("h",h)
+                size = (w,h)
+                image.thumbnail(size)
+                image.save(self.pic_profile.path)
+        if self.pic_map:
+            User=get_user_model() 
+            super(User, self).save()
+            image = Image.open(self.pic_map)
+            (width, height) = image.size
+            print("width", width)
+            print("heigh", height)
+            if (width > 50)  or (height > 50):
+                if (width < height):
+                    factor = height
+                else:
+                    factor = width
+                w = int(width/factor*50)
+                h = int(height/factor*50)
+                print("w",w)
+                print("h",h)
+                size = (w,h)
+                image.thumbnail(size)
+                image.save(self.pic_map.path)
+
+
 
 
 
