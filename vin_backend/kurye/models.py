@@ -100,7 +100,7 @@ class User(AbstractUser):
     def save(self):
         if self.pic_profile:          
             User=get_user_model() 
-            super(User, self).save()
+            super(User, self).save(*args, **kwargs)
             image = Image.open(self.pic_profile)
             (width, height) = image.size
             print("width", width)
@@ -119,7 +119,7 @@ class User(AbstractUser):
                 image.save(self.pic_profile.path)
         if self.pic_map:
             User=get_user_model() 
-            super(User, self).save()
+            super(User, self).save(*args, **kwargs)
             image = Image.open(self.pic_map)
             (width, height) = image.size
             print("width", width)
