@@ -1161,8 +1161,8 @@ def create_pin(request):
         if not courier_pin:
             created_pin = True
 
-    user.pin = new_pin
-    user.save()
+    courier.pin = new_pin
+    courier.save()
 
     return Response({   'success': True,
                         'message': 'Pin yaratıldı',

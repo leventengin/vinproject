@@ -97,10 +97,12 @@ class User(AbstractUser):
     def __str__(self):
        return '%s-%s' % (self.first_name, self.last_name)
 
-    def save(self):
+    def save(self, *args, **kwargs):
+        User=get_user_model() 
+        super(User, self).save(*args, **kwargs)
         if self.pic_profile:          
-            User=get_user_model() 
-            super(User, self).save(*args, **kwargs)
+            #User=get_user_model() 
+            #super(User, self).save(*args, **kwargs)
             image = Image.open(self.pic_profile)
             (width, height) = image.size
             print("width", width)
@@ -118,8 +120,8 @@ class User(AbstractUser):
                 image.thumbnail(size)
                 image.save(self.pic_profile.path)
         if self.pic_map:
-            User=get_user_model() 
-            super(User, self).save(*args, **kwargs)
+            #User=get_user_model() 
+            #super(User, self).save(*args, **kwargs)
             image = Image.open(self.pic_map)
             (width, height) = image.size
             print("width", width)
